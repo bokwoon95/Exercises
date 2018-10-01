@@ -98,14 +98,31 @@ type 'a node =
 
 
 (* 8. Eliminate consecutive duplicates of list elements. (medium) *)
-let compress list =
-  let rev rlist =
-    let rec aux acc = function
-      | [] -> acc
-      | h::t -> aux (h::acc) t
-    in
-    aux [] list
-  in
-;;
-compress ["a";"a";"a";"a";"b";"c";"c";"a";"a";"d";"e";"e";"e";"e"];;
+(* let compress list =
+ *   let rev rlist =
+ *     let rec aux acc = function
+ *       | [] -> acc
+ *       | h::t -> aux (h::acc) t
+ *     in
+ *     aux [] list
+ *   in
+ * ;;
+ * compress ["a";"a";"a";"a";"b";"c";"c";"a";"a";"d";"e";"e";"e";"e"];; *)
 (* - : string list = ["a"; "b"; "c"; "a"; "d"; "e"] *)
+
+(* 19. Rotate a list N places to the left. (medium) *)
+let rec rotate list n =
+  if n = 0 then list
+  else if n > 0 then
+    match list with
+    | [] -> []
+    | h::t -> rotate (t @ [h]) (n-1)
+  else (* n < 0 *)
+    match List.rev list with
+    | [] -> []
+    | h::t -> rotate (List.rev (t @ [h])) (n+1);;
+
+rotate ["a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"] 3;;
+(* - : string list = ["d"; "e"; "f"; "g"; "h"; "a"; "b"; "c"] *)
+rotate ["a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"] (-2);;
+(* - : string list = ["g"; "h"; "a"; "b"; "c"; "d"; "e"; "f"] *)
