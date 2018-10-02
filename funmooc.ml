@@ -1,9 +1,13 @@
 (* gcd that takes two non-negative integers n and m, and that returns the greatest common divisor of n and m, following Euclid's algorithm. *)
 let rec gcd n m =
-  if n = 0 then m else
-    if m = 0 then n else
-      if n>m then gcd m (n mod m) else
-        gcd n (m mod n) ;;
+  if n = 0 then
+    m
+  else if m = 0 then
+    n
+  else if n>m then
+    gcd m (n mod m)
+  else (* m>=n *)
+    gcd n (m mod n) ;;
 
 (* multiple_upto : int -> int -> bool that takes two non-negative integers n and r, and that tells whether n admits at least one divisor between 2 and r, inclusive. In other words that there exists a number d >= 2 and <= r, such that the remainder of the division of n by d is zero. *)
 let rec multiple_upto n r =
@@ -366,3 +370,351 @@ let res,db,_ = engine db { code=1; contact={name="paul";phone_number=(1,2,3,4)}}
 let res,db,_ = engine db { code=1; contact={name="vingo";phone_number=(1,2,3,4)}};;
 let res,db,_ = engine db { code=1; contact={name="drej";phone_number=(1,2,3,4)}};;
 let res,db,_ = engine db { code=0; contact={name="Anon";phone_number=(1,2,3,4)}};;
+
+(* PATTERN MATCHING EXHAUSTIVITY
+ * We have seen in the course the example of non exhaustive pattern matching given below. Write the code for the missing cases. *)
+(* THE GIVEN PRELUDE *)
+type color = Black | Gray | White ;;
+
+let lighter c1 c2 =
+  match (c1, c2) with
+  | (Black, Black) -> false
+  | (White, White) -> false
+  | (Gray, Gray) -> false
+  | (Black, _) -> true
+  | (_, White) -> true
+  | (White, Gray) -> false
+  | (Gray, Black) -> false
+  | (white, Black) -> false
+;;
+
+(* A TYPE FOR ARRAY INDEXES
+ * The previous week, we asked you the following question: Consider a non empty array of integers a, write a function min_index : int array -> int that returns the index of the minimal element of a.
+ * As the arrays contain integers and the indices of arrays are also represented by integers, you might have confused an index and the content of a cell. To avoid such a confusion, let us define a type for index (given in the prelude below).
+ * This type has a single constructor waiting for one integer.
+ * For instance, if you want to represent the index 0, use the value Index 0.
+ * Defining such a type is interesting because it allows the type-checker to check that an integer is not used where an index is expected (or the converse).
+ *
+ * Write a function read : int array -> index -> int such that read a (Index k) returns the k-th element of a.
+ * Write a function inside : int array -> index -> bool such that inside a idx is true if and only if idx is a valid index for the array a.
+ * Write a function next : index -> index such that next (Index k) is equal to Index (k + 1).
+ * Consider a non empty array of integers a, write a function min_index : int array -> index that returns the index of the minimal element of a. *)
+(* THE GIVEN PRELUDE *)
+type index = Index of int
+
+let int_of_index = function
+  | Index n -> n;;
+
+let read a index =
+  a.(int_of_index index);;
+
+let inside a index =
+  let idx = int_of_index index in
+  idx >= 0 && idx < (Array.length a);;
+
+let next index =
+  Index ((int_of_index index)+1);;
+
+let min_index arr =
+  let rec aux index minval mindex =
+    if not (inside arr index) then
+      mindex
+    else
+    let currval = arr.(int_of_index index) in
+    if currval < minval then
+      aux (next index) currval index
+    else
+      aux (next index) minval mindex
+  in
+  aux (Index 1) arr.(0) (Index 0)
+;;
+
+(* THE OPTION TYPE
+ * Optional values are commonly used in OCaml in the return type of partial functions, i.e. functions that may fail on some input. The following questions illustrate such situations.
+ * In the Pervasives module which is loaded automatically, there is a type option with two constructors:
+ * Some (e) has type 't option if e has type 't and represents the presence of some value e of type 't.
+ * None has type 't option and represents the absence of some value of type 't.
+ *
+ * Write a function find : string array -> string -> int option such that find a w = Some idx if a.(idx) = w and find a w = None if there is no such index.
+ * Sometimes, when a value of type t is missing, a default value should be used.
+ * Write a function default_int : int option -> int such that: default_int None = 0 and default_int (Some x) = x.
+ * Write a function merge : int option -> int option -> int option such that:
+ * merge None None = None
+ * merge (Some x) None = merge None (Some x) = Some x
+ * merge (Some x) (Some y) = Some (x + y) *)
+
+let find a w =
+  let len = Array.length a in
+  let rec loop i =
+    if i >= len then
+      None
+    else if String.compare a.(i) w = 0 then
+      Some i
+    else
+      loop (i+1)
+  in
+  loop 0
+;;
+
+let default_int = function
+  | None -> 0
+  | Some n -> n
+;;
+
+let merge a b = match a,b with
+  | None,None -> None
+  | (Some n),None | None, (Some n) -> Some n
+  | (Some n),(Some m) -> Some (n+m)
+;;
+
+(* FIRST IN FIRST OUT
+ * A queue is a standard FIFO data structure. See wikipedia
+ *
+ * In this exercise, we implement a queue with a pair of two lists (front, back) such that front @ List.rev back represents the sequence of elements in the queue.
+ *
+ * Write a function is_empty : queue -> bool such that is_empty q is true if and only if q has no element.
+ * Write a function enqueue : int -> queue -> queue such that enqueue x q is the queue as q except that x is at the end of the queue.
+ * Write a function split : int list -> int list * int list such that split l = (front, back) where l = back @ List.rev front and the length of back and front is List.length l / 2 or List.length l / 2 + 1
+ * Write a function dequeue : queue -> int * queue such that dequeue q = (x, q') where x is the front element of the queue q and q' corresponds to remaining elements. This function assumes that q is non empty. *)
+(* THE GIVEN PRELUDE *)
+type queue = int list * int list
+
+let is_empty ((front, back):queue) =
+  List.length front = 0 && List.length back = 0;;
+
+let enqueue x ((front, back):queue) =
+  ((front,x::back):queue);;
+
+let split l =
+  let halfway_len = (List.length l)/2
+  in
+  let rec loop i fron bac =
+    if i >= halfway_len then
+      List.rev fron, List.rev bac
+    else
+      match fron with
+      | [] -> List.rev fron, List.rev bac (* should never reach here *)
+      | h::t -> loop (i+1) t (h::bac)
+  in
+  loop 0 l []
+;;
+
+let rec dequeue (front, back) =
+  match front with
+  | [] -> dequeue (split (back @ List.rev front))
+  | h::t -> h, (t,back)
+;;
+
+(* CLASSIC FUNCTIONS OVER LISTS
+ * In this exercise, we implement the classic functions over lists.
+ *
+ * Write a function mem : int -> int list -> bool such that mem x l is true if and only if x occurs in l.
+ * Write a function append : int list -> int list -> int list such that append l1 l2 is the concatenation of l1 and l2.
+ * Write a function combine : int list -> int list -> (int * int) list such that combine l1 l2 is the list of pairs obtained by joining the elements of l1 and l2. This function assumes that l1 and l2 have the same length. For instance, combine [1;2] [3;4] = [(1, 3); (2, 4)].
+ * Write a function assoc : (string * int) list -> string -> int option such that assoc l k = Some x if (k, x) is the first pair of l whose first component is k. If no such pair exists, assoc l k = None. *)
+
+let rec rev list =
+  let rec aux accu lis = match lis with
+    | [] -> accu
+    | h::t -> aux (h::accu) t
+  in
+  aux [] list
+;;
+
+let rec mem x l =
+  match l with
+  | [] -> false
+  | h::t -> h=x || mem x t
+;;
+
+let append l1 l2 =
+  let rec aux ll1 ll2 =
+    match ll1 with
+    | [] -> ll2
+    | h::t -> aux t (h::ll2)
+  in aux (rev l1) l2
+;;
+
+let rec append l1 l2 =
+  match l1 with
+  | [] -> l2
+  | h::t -> h::(append t l2)
+;; (*not tail recursive*)
+
+let rec help_append_list l1 l2 =
+    match l1 with
+    | [] -> l2
+    | h::t -> help_append_list t (h::l2);;
+
+let combine l1 l2 =
+  let rec aux ll1 ll2 accu =
+    match ll1,ll2 with
+    | [],[] -> accu
+    | h::t,h'::t' -> aux t t' ((h,h')::accu)
+    | _,_ -> failwith "lists are not of equal length!"
+  in
+  aux (rev l1) (rev l2) []
+;;
+
+let rec assoc l k =
+    match l with
+    | [] -> None
+    | (x,y)::t when x = k -> Some y
+    | _::t -> assoc t k
+;;
+
+(* SYMBOLIC MANIPULATION OF ARITHMETIC EXPRESSIONS
+ * Abstract syntax trees are a convenient way to represent a syntactic expression in a structured way.
+ * Let us consider arithmetic expressions formed by the following rules:
+ *
+ * an integer is an arithmetic expression ;
+ * if lhs and rhs are arithmetic expressions then lhs + rhs is an arithmetic expression;
+ * if lhs and rhs are arithmetic expressions then lhs * rhs is an arithmetic expression.
+ * Such an expression can be represented by a value of type exp as defined in the given prelude (as well as the definition of 1 + 2 * 3 as an example).
+ * Write the expression 2 * 2 + 3 * 3 in a variable my_example.
+ * Write a function eval : exp -> int that computes the value of an arithmetic expression. The evaluation rules are:
+ * If the expression is an integer x, the evaluation is x.
+ * If the expression is lhs + rhs and lhs evaluates to x and rhs evaluates to y, then the evaluation is x + y.
+ * If the expression is lhs * rhs and lhs evaluates to x and rhs evaluates to y, then the evaluation is x * y.
+ * If an expression is of the form a * b + a * c then a * (b + c) is a factorized equivalent expression.
+ * Write a function factorize : exp -> exp that implements this transformation on its input exp if it has the shape a * b + a * c or does nothing otherwise.
+ * Write the reverse transformation of factorize, expand : exp -> exp, which turns an expression of the shape a * (b + c) into a * b + a * c.
+ * Implement a function simplify: exp -> exp which takes an expression e and:
+ * If e is of the shape e * 0 or 0 * e, returns the expression 0.
+ * If e is of the shape e * 1 or 1 * e, returns the expression e.
+ * If e is of the shape e + 0 or 0 + e, returns the expression e.
+ * and does nothing otherwise.
+ * Remarks:
+ *
+ * The symbols (a, b, c and e) can match any expressions, not just integers.
+ * these are a syntactical rewritings, so two expressions are considered equal if and only if they are exactly the same expressions (simply use the = operator to check that).
+ * The rewritings have to be done on the first level of the expression only, not recursively and not deeper in the expression. If the toplevel expression does not match the expected pattern, simply return the expression untouched. *)
+(* THE GIVEN PRELUDE *)
+type exp =
+  | EInt of int
+  | EAdd of exp * exp
+  | EMul of exp * exp;;
+let example =
+  EAdd (EInt 1, EMul (EInt 2, EInt 3));;
+
+let my_example =
+  (EAdd ((EMul (EInt 2, EInt 2)), (EMul (EInt 3, EInt 3))))
+;;
+
+let rec eval e = match e with
+| EAdd (e1, e2) -> (eval e1) + (eval e2)
+| EMul (e1, e2) -> (eval e1) * (eval e2)
+| EInt (e1) -> e1
+;;
+
+(* a * b + a * c *)
+(* let example3 = EAdd (EMul (e1, e2), EMul (e3, e4));; *)
+let factorize e = match e with
+  | EAdd (EMul (e1,e2), EMul (e3,e4))
+    -> if e1 = e3 then
+         EMul (e1, EAdd (e2, e4))
+       else if e1 = e4 then
+         EMul (e1, EAdd (e2, e3))
+       else if e2 = e3 then
+         EMul (e2, EAdd (e1, e4))
+       else if e2 = e4 then
+         EMul (e2, EAdd (e1, e3))
+       else e
+  | _ -> e
+;;
+
+let expand e = match e with
+  | EMul (e1, EAdd (e2, e3)) -> EAdd (EMul (e1, e2), EMul (e1, e3))
+  | _ -> e
+;;
+
+let simplify e = match e with
+  | EMul (e1, EInt 0) | EMul (EInt 0, e1) -> EInt 0
+  | EMul (e1, EInt 1) | EMul (EInt 1, e1) -> e1
+  | EAdd (e1, EInt 0) | EAdd (EInt 0, e1) -> e1
+  | _ -> e
+;;
+
+(* TRIES
+ * The data structure called trie is very convenient to represent a dictionary whose keys are strings. It is space-efficient way while providing a very fast lookup function. 
+ * See the page on Wikipedia. 
+ * In this exercise, we will implement such a data structure, assuming that we want to associate integers to the strings of the dictionary. 
+ * Let us define a trie using two mutually defined types (given in the prelude):
+ * 
+ * trie which represents a trie, that is a tree whose root may contain an integer and whose children are indexed by characters ;
+ * char_to_children which implements the associative data structure whose keys are characters and whose values are trie (childrens).
+ * As a trade-off between speed and memory consumption, we choose an associative list to represent the association between characters and children. 
+ * The prelude also gives examples of empty trie and of another one that contains the following pairs (key, value): 
+ * [("A", 15); ("to", 7); ("tea", 3);("ted", 4); ("ten", 12); ("i", 11); ("in", 5); ("inn", 9)].
+ *
+ * Write a function children_from_char : char_to_children -> char -> trie option such that
+ * children_from_char m c = Some t if (c, t) is the first pair in m with c as a first component ;
+ * children_from_char m c = None if no such pair exists in m.
+ * Write a function update_children : char_to_children -> char -> trie -> char_to_children such that
+ * children_from_char (update_children m c t) c = Some t ;
+ * children_from_char (update_children m c t) c' = children_from_char m c' for c <> c';
+ * If children_from_char m c = Some t then List.length (update_children m c t') = List.length m.
+ * Write a function lookup : trie -> string -> int option such that lookup trie w = Some i if i is the value of the key w in trie and lookup trie w = None if w is not a key of trie. 
+ * To look for a key in a trie, iterate over the characters of the key from left to right. Given the current character c and the current node of the trie n, look for the children n for character c. If such a children exists, continue with that trie and the remainder of the key. If no such children exists, the key is not in the trie. When the characters of the key are entirely consumed, look at the root of the current trie. If there is an integer, this is the value you are looking for. If there is no integer, the key not in the trie.
+ * Write a function insert : trie -> string -> int -> trie such that lookup (insert trie w k) w = Some k and lookup (insert trie w k) w' = lookup trie w' for w <> w'. *)
+(* THE GIVEN PRELUDE *)
+type trie = Trie of int option * char_to_children
+and char_to_children = (char * trie) list
+
+let empty =
+  Trie (None, [])
+
+let example =
+  Trie (None,
+	[('i', Trie (Some 11,
+                     [('n', Trie (Some 5, [('n', Trie (Some 9, []))]))]));
+	 ('t',
+	  Trie (None,
+		[('e',
+		  Trie (None,
+			[('n', Trie (Some 12, [])); ('d', Trie (Some 4, []));
+			 ('a', Trie (Some 3, []))]));
+		 ('o', Trie (Some 7, []))]));
+	 ('A', Trie (Some 15, []))])
+
+let rec children_from_char (m:char_to_children) (c:char) =
+  match m with
+  | [] -> None
+  | (ch,tr)::t -> if ch = c then Some tr else children_from_char t c
+;;
+
+let update_children (m:char_to_children) (c:char) (t:trie) =
+  let rec aux accu m' c t =
+    match m' with
+    | [] -> accu @ [(c,t)]
+    | (ch,tr)::tail ->
+       if ch = c then
+         (List.rev tail) @ [(c,t)] @ accu
+       else
+         aux ((ch,tr)::accu) tail c t
+  in
+  aux [] (List.rev m) c t
+;;
+
+let rec list_of_string string =
+  let len = String.length string in
+  match string with
+  | "" -> []
+  | _ -> (String.get string 0)::(list_of_string (String.sub string 1 (len-1)))
+;;
+
+let lookup trie (w:string) =
+  let rec aux trie lis =
+    match trie with
+    | None,_ -> None
+    | Some integer,char2chil ->
+       (match lis with
+       | [] -> Some integer
+       | _ -> Some 5)
+  in
+  aux trie (list_of_string w)
+;;
+
+let insert trie w v =
+  "Replace this string with your implementation." ;;
+
