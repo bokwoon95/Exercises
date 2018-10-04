@@ -703,18 +703,25 @@ let rec list_of_string string =
   | _ -> (String.get string 0)::(list_of_string (String.sub string 1 (len-1)))
 ;;
 
-let lookup trie (w:string) =
-  let rec aux trie lis =
-    match trie with
-    | None,_ -> None
-    | Some integer,char2chil ->
-       (match lis with
-       | [] -> Some integer
-       | _ -> Some 5)
+let lookup triee (w:string) =
+  let rec aux triee w_lis =
+    match w_lis with
+    | [] -> (match triee with
+             | Trie (None,_) -> None
+             | Trie (iopt,_) -> iopt
+            )
+    | h::t -> (let Trie (_,char2chil) = triee in
+               let var = children_from_char char2chil h in
+               match var with
+               | None -> None
+               | Some tr -> aux tr t
+              )
   in
-  aux trie (list_of_string w)
+  aux triee (list_of_string w)
 ;;
 
 let insert trie w v =
   "Replace this string with your implementation." ;;
 
+let a = Trie (Some 5, [])
+;;
