@@ -99,9 +99,9 @@ let next date =
     { year=a; month=b; day=c; hour=d; minute=e }
   in
   if      date.minute+1 <= 1 then cons_date a b c d (e+1)
-  else if date.hour+1 <= 2   then cons_date a b c (d+1) 0
-  else if date.day+1 <= 4    then cons_date a b (c+1) 0 0
-  else if date.month+1 <= 5  then cons_date a (b+1) 1 0 0
+  else if date.hour+1   <= 2 then cons_date a b c (d+1) 0
+  else if date.day+1    <= 4 then cons_date a b (c+1) 0 0
+  else if date.month+1  <= 5 then cons_date a (b+1) 1 0 0
   else                            cons_date (a+1) 1 1 0 0;
 ;;
 let of_int minutes =
@@ -227,7 +227,7 @@ type query = {
     code    : int;
     contact : contact;
   }
-
+(* YOUR ANSWER *)
 let search db contact =
   let rec aux idx =
     if idx >= db.number_of_contacts then
@@ -375,7 +375,7 @@ let res,db,_ = engine db { code=0; contact={name="Anon";phone_number=(1,2,3,4)}}
  * We have seen in the course the example of non exhaustive pattern matching given below. Write the code for the missing cases. *)
 (* THE GIVEN PRELUDE *)
 type color = Black | Gray | White ;;
-
+(* YOUR ANSWER *)
 let lighter c1 c2 =
   match (c1, c2) with
   | (Black, Black) -> false
@@ -401,7 +401,7 @@ let lighter c1 c2 =
  * Consider a non empty array of integers a, write a function min_index : int array -> index that returns the index of the minimal element of a. *)
 (* THE GIVEN PRELUDE *)
 type index = Index of int
-
+(* YOUR ANSWER *)
 let int_of_index = function
   | Index n -> n;;
 
@@ -463,7 +463,7 @@ let default_int = function
 
 let merge a b = match a,b with
   | None,None -> None
-  | (Some n),None | None, (Some n) -> Some n
+  | (Some n),None | None,(Some n) -> Some n
   | (Some n),(Some m) -> Some (n+m)
 ;;
 
@@ -478,7 +478,7 @@ let merge a b = match a,b with
  * Write a function dequeue : queue -> int * queue such that dequeue q = (x, q') where x is the front element of the queue q and q' corresponds to remaining elements. This function assumes that q is non empty. *)
 (* THE GIVEN PRELUDE *)
 type queue = int list * int list
-
+(* YOUR ANSWER *)
 let is_empty ((front, back):queue) =
   List.length front = 0 && List.length back = 0;;
 
@@ -600,7 +600,7 @@ let example =
 let my_example =
   (EAdd ((EMul (EInt 2, EInt 2)), (EMul (EInt 3, EInt 3))))
 ;;
-
+(* YOUR ANSWER *)
 let rec eval e = match e with
 | EAdd (e1, e2) -> (eval e1) + (eval e2)
 | EMul (e1, e2) -> (eval e1) * (eval e2)
@@ -636,15 +636,15 @@ let simplify e = match e with
 ;;
 
 (* TRIES
- * The data structure called trie is very convenient to represent a dictionary whose keys are strings. It is space-efficient way while providing a very fast lookup function. 
- * See the page on Wikipedia. 
- * In this exercise, we will implement such a data structure, assuming that we want to associate integers to the strings of the dictionary. 
+ * The data structure called trie is very convenient to represent a dictionary whose keys are strings. It is space-efficient way while providing a very fast lookup function.
+ * See the page on Wikipedia.
+ * In this exercise, we will implement such a data structure, assuming that we want to associate integers to the strings of the dictionary.
  * Let us define a trie using two mutually defined types (given in the prelude):
- * 
+ *
  * trie which represents a trie, that is a tree whose root may contain an integer and whose children are indexed by characters ;
  * char_to_children which implements the associative data structure whose keys are characters and whose values are trie (childrens).
- * As a trade-off between speed and memory consumption, we choose an associative list to represent the association between characters and children. 
- * The prelude also gives examples of empty trie and of another one that contains the following pairs (key, value): 
+ * As a trade-off between speed and memory consumption, we choose an associative list to represent the association between characters and children.
+ * The prelude also gives examples of empty trie and of another one that contains the following pairs (key, value):
  * [("A", 15); ("to", 7); ("tea", 3);("ted", 4); ("ten", 12); ("i", 11); ("in", 5); ("inn", 9)].
  *
  * Write a function children_from_char : char_to_children -> char -> trie option such that
@@ -654,7 +654,7 @@ let simplify e = match e with
  * children_from_char (update_children m c t) c = Some t ;
  * children_from_char (update_children m c t) c' = children_from_char m c' for c <> c';
  * If children_from_char m c = Some t then List.length (update_children m c t') = List.length m.
- * Write a function lookup : trie -> string -> int option such that lookup trie w = Some i if i is the value of the key w in trie and lookup trie w = None if w is not a key of trie. 
+ * Write a function lookup : trie -> string -> int option such that lookup trie w = Some i if i is the value of the key w in trie and lookup trie w = None if w is not a key of trie.
  * To look for a key in a trie, iterate over the characters of the key from left to right. Given the current character c and the current node of the trie n, look for the children n for character c. If such a children exists, continue with that trie and the remainder of the key. If no such children exists, the key is not in the trie. When the characters of the key are entirely consumed, look at the root of the current trie. If there is an integer, this is the value you are looking for. If there is no integer, the key not in the trie.
  * Write a function insert : trie -> string -> int -> trie such that lookup (insert trie w k) w = Some k and lookup (insert trie w k) w' = lookup trie w' for w <> w'. *)
 (* THE GIVEN PRELUDE *)
@@ -676,22 +676,21 @@ let example =
 			 ('a', Trie (Some 3, []))]));
 		 ('o', Trie (Some 7, []))]));
 	 ('A', Trie (Some 15, []))])
-
-let rec children_from_char (m:char_to_children) (c:char) =
+(* YOUR ANSWER *)
+let rec children_from_char (m:char_to_children) (c:char) : trie option =
   match m with
   | [] -> None
   | (ch,tr)::t -> if ch = c then Some tr else children_from_char t c
 ;;
 
-let update_children (m:char_to_children) (c:char) (t:trie) =
+let update_children (m:char_to_children) (c:char) (t:trie) : char_to_children =
   let rec aux accu m' c t =
     match m' with
     | [] -> accu @ [(c,t)]
-    | (ch,tr)::tail ->
-       if ch = c then
-         (List.rev tail) @ [(c,t)] @ accu
-       else
-         aux ((ch,tr)::accu) tail c t
+    | (ch,tr)::tail -> if ch = c then
+                         (List.rev tail) @ [(c,t)] @ accu
+                       else
+                         aux ((ch,tr)::accu) tail c t
   in
   aux [] (List.rev m) c t
 ;;
@@ -720,8 +719,394 @@ let lookup triee (w:string) =
   aux triee (list_of_string w)
 ;;
 
-let insert trie w v =
-  "Replace this string with your implementation." ;;
+let insert (triee:trie) w v : trie =
+  let rec aux trie_opt w_lis v =
+    match w_lis,trie_opt with
+    | []  ,None    -> Trie (Some v, [])
+    | []  ,Some tr -> (let Trie (iopt, ct_list) = tr in
+                       Trie (Some v, ct_list)
+                      )
+    | h::t,None    -> (let tr' = aux None t v in
+                       Trie (None, [(h, tr')])
+                      )
+    | h::t,Some tr -> (let Trie (iopt, ct_list) = tr in
+                       let tr' = aux (children_from_char ct_list h) t v
+                       in
+                       Trie (iopt, (update_children ct_list h tr'))
+                      )
+  in
+  aux (Some triee) (list_of_string w) v
+;;
 
-let a = Trie (Some 5, [])
+(* TYPE DIRECTED PROGRAMMING
+ * In this exercise, you will experiment with type-directed programming.
+ *
+ * We give you the example program of the lecture in which two type definitions have been changed as in the given prelude. A case Tired has been added to type state, and a case Sleep has been added to type action.
+ * By clicking the typecheck button, you can notice that several warnings are issued by the OCaml compiler. Go through the code and fix these warnings as follow.
+ *
+ * Update apply_action so that the Sleep action turns a character from the Tired state to the Hungry state.
+ * Update possible_changes_for_character so that the Tired state behaves as the Hungry state.
+ * Update describe_state so that the description of the Tired state is "tired".
+ * Update tell_action so that tell_action Sleep is "took a nap". *)
+(* THE GIVEN PRELUDE *)
+type story = {
+  context         : context;
+  perturbation    : event;
+  adventure       : event list;
+  conclusion      : context;
+}
+and context = { characters : character list }
+and character = { name  : string; state : state; location : location }
+and event = Change of character * state | Action of character * action
+and state = Happy | Hungry | Tired
+and action = Eat | GoToRestaurant | Sleep
+and location = Appartment | Restaurant
+
+let compatible_actions_for_character character context =
+  match character with
+  | { location = Restaurant } -> [Eat]
+  | { location = Appartment } -> [GoToRestaurant]
+;;
+
+let apply_action character = function
+  | Eat ->
+     { state = Happy;
+       location = character.location; name = character.name }
+  | GoToRestaurant ->
+     { location = Restaurant;
+       state = character.state; name = character.name }
+  | Sleep ->
+     { state = Hungry;
+       location = character.location; name = character.name }
+;;
+
+let compatible_actions context =
+  let rec aux = function
+    | [] -> []
+    | character :: cs ->
+       let can_do = compatible_actions_for_character character context in
+       let rec aux' = function
+         | [] -> []
+         | a :: actions -> Action (character, a) :: aux' actions
+       in
+       aux' can_do
+  in
+  aux context.characters
+;;
+
+let possible_changes_for_character character =
+  match character with
+  | { state = Happy } -> [Hungry]
+  | { state = Hungry } | { state = Tired }-> []
+;;
+let apply_change character state =
+  { name = character.name; state = state; location = character.location }
+;;
+
+let possible_changes context =
+  let rec aux = function
+    | [] -> []
+    | character :: cs ->
+       let possible_changes = possible_changes_for_character character in
+       let rec aux' = function
+         | [] -> []
+         | c :: changes -> Change (character, c) :: aux' changes
+       in
+       aux' possible_changes
+  in
+  aux context.characters
+;;
+
+let character_of_event = function
+  | Action (character, _) -> character
+  | Change (character, _) -> character
+;;
+
+let apply event context =
+  let rec aux = function
+    | [] -> assert false
+    | character :: cs ->
+       if character = character_of_event event then
+         match event with
+         | Action (_, action) -> apply_action character action :: cs
+         | Change (_, change) -> apply_change character change :: cs
+       else
+         character :: aux cs
+  in
+  { characters = aux context.characters }
+;;
+
+let rec is_one_of state states =
+  match states with
+  | [] -> false
+  | state' :: ss -> state = state' || is_one_of state ss
+;;
+
+let rec all_characters_are states = function
+  | [] ->
+     true
+  | character :: cs ->
+     is_one_of character.state states && all_characters_are states cs
+;;
+
+let random_pick xs =
+  List.nth xs (Random.int (List.length xs))
+;;
+let something_happens context =
+  let what_can_happen = compatible_actions context @ possible_changes context in
+  let event = random_pick what_can_happen in
+  event, apply event context
+;;
+
+let happy context =
+  all_characters_are [Happy] context.characters
+;;
+
+let rec end_story events context =
+  if happy context then
+    context, List.rev events
+  else
+    let event, context = something_happens context in
+    end_story (event :: events) context
+;;
+
+let make_story initial_context =
+  let perturbation, context = something_happens initial_context in
+  let conclusion, adventure = end_story [] context in
+  {
+    context = initial_context;
+    perturbation = perturbation;
+    adventure = adventure;
+    conclusion = conclusion
+  }
+;;
+
+let describe_location = function
+  | Appartment -> "at home"
+  | Restaurant -> "at the restaurant"
+;;
+let describe_state = function
+  | Happy -> "happy"
+  | Hungry -> "hungry"
+  | Tired -> "tired"
+;;
+let describe character =
+  character.name ^ " was "
+  ^ describe_location character.location
+  ^ " and was " ^ describe_state character.state ^ ". "
+;;
+
+let tell_context context =
+  let rec aux = function
+    | [] -> ""
+    | character :: characters -> describe character ^ aux characters
+  in
+  aux context.characters
+;;
+
+let tell_action = function
+  | Eat -> "ate"
+  | GoToRestaurant -> "went to the restaurant"
+  | Sleep -> "took a nap"
+;;
+
+let tell_event = function
+  | Action (character, action) ->
+      character.name ^ " " ^ tell_action action ^ ". "
+  | Change (character, state) ->
+      character.name ^ " was made " ^ describe_state state ^ ". "
+;;
+
+let rec tell_adventure = function
+  | [] -> ""
+  | event :: adventure -> tell_event event ^ tell_adventure adventure
+;;
+
+let tell story =
+  "Once upon a time, "
+  ^ tell_context story.context
+  ^ "One day, something wrong happened. "
+  ^ tell_event story.perturbation
+  ^ tell_adventure story.adventure
+  ^ "At the end, the peace was restored. "
+  ^ tell_context story.conclusion
+;;
+
+let story = tell (make_story {
+    characters = [
+      { name = "Sophie"; location = Appartment; state = Happy };
+      { name = "Socrate"; location = Appartment; state = Happy };
+    ]
+  });;
+
+(* BALANCED BINARY TREES
+ * A binary tree t, of the 'a bt type given in the prelude, is either an empty tree, or the root of a tree with a value and two children subtrees.
+ *
+ * Write a function height : 'a bt -> int that computes the height of a tree.
+ * A tree is balanced if, for all internal node n, its two subtrees have the same height. Write a function balanced : 'a bt -> bool that tells if a tree is balanced. *)
+(* THE GIVEN PRELUDE *)
+type 'a bt =
+  | Empty
+  | Node of 'a bt * 'a * 'a bt
+;;
+(* YOUR ANSWER *)
+let rec height t : int =
+  match t with
+  | Empty -> 0
+  | Node (left, _, right) -> max (1 + height left) (1 + height right)
+;;
+
+let rec balanced t : bool =
+  match t with
+  | Empty -> true
+  | Node (Empty, _, right) -> right = Empty
+  | Node (left,  _, Empty) -> left = Empty
+  | Node (left,  _, right) -> balanced left && balanced right
+;;
+
+(* AN IMPLEMENTATION OF LIST WITH AN EFFICIENT CONCATENATION
+ * Concatenating two standard OCaml lists takes a time proportional to the length of the first list. In this exercise, we implement a data structure for lists with a constant time concatenation.
+ * The preludes gives a type 'a clist, which is either a single element of type 'a, the concatenation of two 'a clist or an empty 'a clist.
+ * This representation of a list is not linear: it is a tree-like datastructure since the CApp constructor contains two values of type 'a clist.
+ * The sequence of elements contained in a value of type 'a clist is obtained by a depth-first traversal of the tree. For instance, the example given in the prelude, of type int clist is a valid representation for the sequence [1;2;3;4].
+ *
+ * Write a function to_list : 'a clist -> 'a list which computes the 'a list that contains the same elements as the input 'a clist, in the same order.
+ * Write a function of_list : 'a list -> 'a clist which computes the 'a clist that contains the same elements as the input 'a list, in the same order.
+ * Write a function append : 'a clist -> 'a clist -> 'a clist such that:
+ * append CEmpty l = append l CEmpty = l
+ * append l1 l2 = CApp (l1, l2) otherwise
+ * Write a function hd : 'a clist -> 'a option that returns Some x where x is the first element of the input 'a clist, if it is not empty, and returns None otherwise.
+ * Write a function tl : 'a clist -> 'a clist option that returns Some l where l is the input sequence without its first element, if this input sequence is not empty, or returns None otherwise. *)
+(* THE GIVEN PRELUDE *)
+type 'a clist =
+  | CSingle of 'a
+  | CApp of 'a clist * 'a clist
+  | CEmpty
+;;
+
+let example =
+  CApp (CApp (CSingle 1,
+              CSingle 2),
+        CApp (CSingle 3,
+              CApp (CSingle 4, CEmpty)))
+;;
+(* YOUR ANSWER *)
+let splithalf l =
+  let rec aux i a b =
+    match b with
+    | [] -> [],[]
+    | h::t when i=0 -> (List.rev a), b
+    | h::t -> aux (i-1) (h::a) t
+  in
+  aux ((List.length l) / 2) [] l 
+;;
+
+let rec to_list (l:'a clist) : 'a list =
+  match l with
+  | CEmpty -> []
+  | CSingle a -> [a]
+  | CApp (a, b) -> (to_list a) @ (to_list b)
+;;
+
+let rec of_list (l:'a list) : 'a clist =
+  let a,b = splithalf l in
+  match a,b with
+  |  [],[]  -> CEmpty
+  | [a],[]  -> CApp (CSingle a, CEmpty)
+  |   a,[]  -> CApp (of_list a, CEmpty)
+  |  [],[b] -> CApp (CEmpty   , CSingle b)
+  | [a],[b] -> CApp (CSingle a, CSingle b)
+  |   a,[b] -> CApp (of_list a, CSingle b)
+  |  [],b   -> CApp (CEmpty   , of_list b)
+  | [a],b   -> CApp (CSingle a, of_list b)
+  |   a,b   -> CApp (of_list a, of_list b)
+;;
+
+let append (l1:'a clist) (l2:'a clist) : 'a clist =
+  CApp (l1, l2)
+;;
+
+let rec hd (l:'a clist) : 'a option =
+  match l with
+  | CEmpty -> None
+  | CSingle a -> Some a
+  | CApp (a,b) -> let head = hd a in
+                  if head != None then head else hd b
+;;
+
+let rec hd (l:'a clist) : 'a option =
+  match l with
+  | CEmpty -> None
+  | CSingle a -> Some a
+  | CApp (CEmpty, b) -> hd b
+  | CApp (CSingle a, b) -> Some a
+  | CApp (a,b) -> let head_opt = hd a in
+                  match head_opt with
+                  | None -> hd b
+                  | Some head -> Some head
+;;
+
+let rec tl (l:'a clist) : 'a clist option =
+  match l with
+  | CEmpty -> None
+  | CSingle a -> Some CEmpty
+  | CApp (CEmpty, b) -> tl b
+  | CApp (CSingle a, b) -> Some b
+  | CApp (a,b) -> let tail_opt = tl a in
+                  match tail_opt with
+                  | None -> tl b
+                  | Some tail -> Some (CApp (tail, b))
+;;
+
+(* ADVANCED PATTERNS
+ * Let's rewrite some pattern matching with advanced constructs.
+ *
+ * Factorize the pattern matching of function simplify using or-patterns. It should boil down to three cases.
+ * The only_small_lists function takes a list as input and returns this list only if it contains two or less elements, otherwise the empty list is returned. Rewrite this function using or-patterns and an as-pattern. It should boil down to two cases.
+ * Turn the third case of no_consecutive_repetition into two distinct cases, dropping the if construct in favor of a when clause. *)
+(* THE GIVEN PRELUDE *)
+type e = EInt of int | EMul of e * e | EAdd of e * e;;
+
+let simplify = function
+  | EMul (EInt 1, e) -> e
+  | EMul (e, EInt 1) -> e
+  | EMul (EInt 0, e) -> EInt 0
+  | EMul (e, EInt 0) -> EInt 0
+  | EAdd (EInt 0, e) -> e
+  | EAdd (e, EInt 0) -> e
+  | e -> e
+;;
+
+let simplify = function
+  | EMul (e1, EInt 0) | EMul (EInt 0, e1) -> EInt 0
+  | EMul (EInt 1, e) | EMul (e, EInt 1) | EAdd (EInt 0, e) | EAdd (e, EInt 0) -> e
+  | e -> e
+;;
+
+let only_small_lists = function
+  | [] -> []
+  | [x] -> [x]
+  | [x;y] -> [x;y]
+  | _ -> []
+;;
+
+let only_small_lists = function
+  | [_] | [_;_] as z -> z
+  | [] | _::_ -> []
+;;
+
+let rec no_consecutive_repetition = function
+  | [] -> []
+  | [x] -> [x]
+  | x :: y :: ys ->
+      if x = y then
+        no_consecutive_repetition (y :: ys)
+      else
+        x :: (no_consecutive_repetition (y :: ys))
+;;
+
+let rec no_consecutive_repetition = function
+  | [] | [_] as z -> z
+  | x::y::ys when x=y -> no_consecutive_repetition (y :: ys)
+  | x::y::ys -> x :: (no_consecutive_repetition (y :: ys))
 ;;
