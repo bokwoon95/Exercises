@@ -998,7 +998,7 @@ let splithalf l =
     | h::t when i=0 -> (List.rev a), b
     | h::t -> aux (i-1) (h::a) t
   in
-  aux ((List.length l) / 2) [] l 
+  aux ((List.length l) / 2) [] l
 ;;
 
 let rec to_list (l:'a clist) : 'a list =
@@ -1109,4 +1109,216 @@ let rec no_consecutive_repetition = function
   | [] | [_] as z -> z
   | x::y::ys when x=y -> no_consecutive_repetition (y :: ys)
   | x::y::ys -> x :: (no_consecutive_repetition (y :: ys))
+;;
+
+(* LAMBDA-EXPRESSIONS AS VALUES
+ * In this exercise, we will define functions as values, also called lambda expressions, using the keyword function to do a pattern-matching on their argument. As a result, you are not allowed to use match ... with in your code.
+ * 
+ * Define a function last_element: 'a list -> 'a that returns the last element of a list. Your function may return (invalid_arg "last_element") when the list is empty.
+ * Write a function is_sorted: 'a list -> bool that takes a list l as argument, and that checks that the list is sorted in increasing order according to the polymorphic comparison operator <. *)
+let rec last_element = function 
+  | [] -> invalid_arg "last_element"
+  | [x] -> x
+  | h::t -> last_element t
+;;
+
+let rec is_sorted = function
+  | [] -> true
+  | [x] -> true
+  | x::y::t -> x < y && is_sorted (y::t)
+;;
+
+(* USING FIRST CLASS FUNCTIONS
+ * Write a function compose : ('a -> 'a) list -> ('a -> 'a) that takes as argument a list l of functions, and that returns the function that is the composition of the functions in l. For instance, compose [f;g;h] x = f (g (h x)). Or with concrete functions, compose [(fun x -> x+1);(fun x -> 3*x);(fun x -> x-1)] 2 = 4.
+ * Write a function fixedpoint : (float -> float) -> float -> float -> float that takes a function f of type float -> float and two floating-point arguments start and delta. The function fixedpoint applies repetitively f to the result of its previous application, starting from start, until it reaches a value y where the difference between y and (f y) is smaller than delta. In that case it returns the value of y. For instance, fixedpoint cos 0. 0.001 yields approximately 0.739 (ref). *)
+(* THE GIVEN PRELUDE *)
+type int_ff = int -> int;;
+(* YOUR ANSWER *)
+let rec compose = function
+  | [] -> fun x -> x
+  | [f] -> f
+  | h::t -> fun x -> h (compose t x)
+;;
+
+let fabs x =
+  if x < 0. then (-.x) else x
+;;
+
+let rec fixedpoint f start (delta:float) =
+  let fy = f start in
+  if fabs (fy -. start) < delta then
+    start
+  else
+    fixedpoint f fy delta
+;;
+
+(* FUNCTIONS RETURNING FUNCTIONS
+ * The following function checks the pairwise equality of the elements of two lists, on the common length of both lists:
+ * 
+ * let rec equal_on_common l1 l2 = match l1,l2 with
+ *   | [],_ -> true
+ *   | _,[] -> true
+ *   | h1::r1,h2::r2 -> h1=h2 && equal_on_common r1 r2
+ * Rewrite equal_on_common : 'a list -> 'a list -> bool by using nested function .. -> constructions. Using the match .. with construction or tuple patterns is forbidden. You can (and must) only call the operators && and =, and the function equal_on_common recursively. *)
+let rec equal_on_common l1 l2 = match l1,l2 with
+  | [],_ -> true
+  | _,[] -> true
+  | h1::r1,h2::r2 -> h1=h2 && equal_on_common r1 r2
+;;
+
+(* let rec equal_on_common l1 = function
+ *   | [] -> true
+ *   | h2::t2 -> if l1 = [] then true
+ *               else
+ *                 let h1::t1 = l1 in
+ *                 h1 = h2 && equal_on_common t1 t2
+ * ;; *)
+
+(* A SMALL ARITHMETIC INTERPRETER
+ * In this exercise, we will write a small program that computes some operations on integers. We will use a small datatype operation that describes all the operations to perform to compute the result. For example, suppose we want to do the following computation:
+ * mul (add 0 1) (mul 3 4)
+ * We can describe it as: Op ("mul", Op ("add", Value 0, Value 1), Op ("mul", Value 3, Value 4))
+ * The Op constructor takes as a first argument a string, which is the name of the function that is stored in an environment. We suppose there exists a variable initial_env that contains some predefined functions.
+ *
+ * First of all, we need a way to find a function in an environment of type env, which is basically a list of tuples. Each of these tuples contains a string, which is the name of the function, and a value of type int -> int -> int, which is basically a function that takes two arguments of type int and returns an int as a result.
+ * Write a function lookup_function : string -> env -> (int -> int -> int) that returns the function associated to a name in an environment. If there is no function with the name given, you can return invalid_arg "lookup_function".
+ * Another useful feature would be to add functions to a given environment. Write the function add_function : string -> (int -> int -> int) -> env -> env that takes an environment e, a name for the function n and a function f, and returns a new environment that contains the function f that is associated to the name n.
+ *
+ * What you can notice now is that unless you put explicit annotations, those two previous functions should be polymorphic and work on any list of couples. Actually, lookup_function could have been written as List.assoc.
+ * Create a variable my_env: env that is the initial environment plus a function associated to the name "min" that takes two numbers and returns the lowest. You cannot use the already defined Pervasives.min function, nor any let .. in. Take advantage of lambda expressions!
+ * Now that we have correctly defined the operations to use the environment, we can write the function that computes an operation. Write a function compute: env -> operation -> int that takes an environment and an operation description, and computes this operation. The result is either:
+ * Directly the value.
+ * An operation that takes two computed values and a function from the environment.
+ * Let's be a bit more efficient and use the over-application: suppose a function id: 'a -> 'a, then id id will also have type 'a -> 'a, since the 'a is instantiated with 'a -> 'a . Using that principle, we can apply id to itself infinitely since it will always return a function. Write a function compute_eff : env -> operation -> int that takes an environment and an operation, and computes it. However, you cannot use let inside the function! *)
+(* THE GIVEN PRELUDE *)
+type operation =
+  | Op of string * operation * operation
+  | Value of int
+
+type env = (string * (int -> int -> int)) list
+(* YOUR ANSWER *)
+let rec lookup_function str env =
+  match env with
+  | [] -> invalid_arg "lookup_function"
+  | (k,v)::t when k = str -> v
+  | h::t -> lookup_function str t
+;;
+
+let add_function name op env =
+  (name, op)::env
+;;
+
+let my_env =
+  [("add", (+));("sub",(-));("mul",( * ));("div", (/));("min",fun x y -> if x < y then x else y)]
+;;
+
+let rec compute env op =
+  match op with
+  | Value int -> int
+  | Op (string, x, y) -> (lookup_function string env) (compute env x) (compute env y)
+;;
+
+let rec compute_eff env = function 
+  | Value int -> int
+  | Op (string, x, y) -> (lookup_function string env) (compute_eff env x) (compute_eff env y)
+;;
+
+(* USING AND WRITING THE MAP FUNCTION
+ * The idea of this exercise is to use the principle of the map function to implement algorithms that transform data structures using higher-order functions.
+ * 
+ * Using the function map from the module List, write a function wrap : 'a list -> 'a list list that transforms a list of elements 'ainto a list of singleton lists. 
+ * For instance, wrap [1;2;3] is equal to [[1];[2];[3]]
+ * Consider the definition of the type tree given in the prelude. It represents binary trees carrying data items, on its internal nodes, and on its leaves. 
+ * Write a function tree_map : ('a -> 'b) -> 'a tree -> 'b tree such that tree_map f t yields a tree of the same structure as t, but with all its data values x replaced by f x 
+ * For example, suppose a function string_of_int : int -> string, that takes an integer and generates the string that represent this integer. Applied to tree_map and a tree of integers (i.e. of type int tree), it would yield a tree of strings (i.e. of type string tree). *)
+(* THE GIVEN PRELUDE *)
+type 'a tree =
+    Node of 'a tree * 'a * 'a tree
+  | Leaf of 'a;;
+(* YOUR ANSWER *)
+let wrap l =
+  List.map (fun x -> [x]) l
+;;
+
+let rec tree_map f = function
+  | Leaf a -> Leaf (f a)
+  | Node (left, a, right) -> Node ((tree_map f left), (f a), (tree_map f right))
+;;
+
+(* USING FOLD TO PRODUCE LISTS
+ * The idea of this exercise is to write functions that iterate on lists, using the fold_left and fold_right functions from the List module.
+ * 
+ * Write a function filter : ('a -> bool) -> 'a list -> 'a list that takes a predicate p (a function returning a boolean) and a list l and returns all the elements of l that satisfy p (for which p returns true).
+ * Define, using List.fold_right, a function partition : ('a -> bool) -> 'a list -> 'a list * 'a list that takes a predicate p and a list l, and that partitions l by p. It returns a pair of two lists (lpos,lneg), where lpos is the list of all elements of l that satisfy p, and lneg is the list of all elements that do not satisfy p.
+ * One way of sorting a list is as follows:
+ * The empty list is already sorted.
+ * If the list l has a head h and a rest r, then a sorted version of l can be obtained in three parts:
+ * first a sorted version of all elements of r that are smaller or equal to h,
+ * then h,
+ * then a sorted version of all elements of r that are greater than h.
+ * Write a function sort:'a list-> 'a list that implements this algorithm, using the function partition of the previous question. This sorting algorithm is also known as Quicksort where the pivot is always the first element of the list. *)
+
+let filter p l =
+  let rec aux accu p l =
+    match l with
+    | [] -> accu
+    | h::t when p h -> aux (h::accu) p t
+    | h::t -> aux accu p t
+  in
+  aux [] p (List.rev l)
+;;
+
+let partition p l =
+  let f x (lpos,lneg) =
+    match p x with
+    | true  -> (x::lpos,   lneg)
+    | false -> (   lpos,x::lneg)
+  in
+  List.fold_right f l ([],[])
+;;
+
+let rec sort = function
+  | [] -> []
+  | h::t -> (let lpos,lneg = partition ((>) h) t in
+             (sort lpos) @ [h] @ (sort lneg)
+            )
+;;
+
+(* USING FOLD TO CHECK PREDICATES
+ * Using List.fold_left, write a function for_all : ('a -> bool) -> 'a list -> bool. It takes as argument a list l of type 'a list, and a predicate p of type 'a -> bool. It must return true if and only if all elements of l satisfy the predicate p.
+ * Using List.fold_left, write a function exists : ('a -> bool) -> 'a list -> bool. It takes as argument a list l of type 'a list, and a predicate p of type 'a -> bool. It must returns true if at least one element of l satisfies the predicate p.
+ * Write a function sorted : ('a -> 'a -> int) -> 'a list -> bool, using List.fold_left that checks that a list of elements l of type 'a is sorted, according to an ordering function cmp of type 'a -> 'a -> int. 
+ * The ordering function returns:
+ * 1 (or any positive number) if the first element is greater than the second,
+ * -1 (or any negative number) if the first element is lesser than the second,
+ * and 0 otherwise.
+ * For the fold_left part, you can use the type 'a option as the accumulator: at each iteration of fold_left, if the list if sorted until now, the acccumulator is either Some v, where v is the previous element, or None otherwise. 
+ * Remember, the empty list is sorted, so you can use the list with at least one element to check using fold_left. *)
+let for_all p l =
+  let f b x =
+    b && p x
+  in
+  List.fold_left f true l
+;;
+
+let exists p l =
+  let f b x =
+    b || p x
+  in
+  List.fold_left f false l
+;;
+
+let sorted cmp l =
+  let f opt x =
+    match opt with 
+    | Some v when (cmp v x <= 0) -> Some x
+    | _ -> None
+  in
+  match l with
+  | [] -> true
+  | head::tail -> 
+      (match List.fold_left f (Some head) l with
+       | None -> false
+       | Some v -> true
+      )
 ;;
