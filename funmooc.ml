@@ -1322,3 +1322,257 @@ let sorted cmp l =
        | Some v -> true
       )
 ;;
+
+(* UNRAVELING THE AUTOMATIC GRADER
+ * In this exercise, we will unveil the basics of the grading system.
+ * 
+ * Note: This exercise is about exceptions, but it uses the unit type that is only presented in the next sequence.
+ * 
+ * For each question, we call both your function and a reference function on a list of randomly sampled test cases, and observe the results. We also have to handle the case where a function raises an exception instead of producing a result. Sometimes, we even expect your function to raise an exception, and want to compare it to the exception raised by the reference function. 
+ * For this, we use the 'a result type given in the prelude. 
+ * Define a function exec: ('a -> 'b) -> 'a -> 'b result, that calls the given function on the given argument, and returns Ok with the result if everything went well, and Error with the exception raised, if there was one.
+ * To be able to provide you with the nice error reports, we use an intermediate type for producing reports, similar to the one given in the prelude. 
+ * Define a function compare with the following signature.
+ * compare : 'a result -> 'a result -> ('a -> string) -> message
+ * This function will take first the user function's result and then the reference function's result. It also takes a printer compatible with the return type, to display the results as in one the following cases.
+ * ("got correct value 13", Successful)
+ * ("got unexpected value 13", Failed)
+ * ("got correct exception Exit", Successful)
+ * ("got unexpected exception Exit", Failed)
+ * You must respect the exact wording for your solution to be accepted. To display exceptions, you can use the provided exn_to_string function.
+ * Then we define random samplers for each type of data that will be passed to your function. For a given type 'a, a random sampler simply has type unit -> 'a, an imperative function that returns a new value of type 'a every time you give it a unit. 
+ * Define a function test with the following signature.
+ * test : ('a -> 'b) -> ('a -> 'b) -> (unit -> 'a) -> ('b -> string) -> report
+ * This function must proceed to exactly 10 tests, calling the sampler each time, and return the list of messages. For each sample, you will exec the user function (the first parameter), then exec the reference function, and compare the results. It will then return the list containing the 10 comparison messages. 
+ * Your solution must respect the constraint that the first call to the sampler corresponds to the first message of the list, the second to the second, etc. Be cautious about not reversing the list. And since the sampler is an imperative, remember to use let ... in constructs if necessary, to force the order of evaluation. *)
+(* THE GIVEN PRELUDE *)
+type report = message list
+and message = string * status
+and status = Successful | Failed
+type 'a result = Ok of 'a | Error of exn
+(* YOUR ANSWER *)
+let exec f x =
+  try
+    Ok (f x)
+  with
+    ex -> Error ex
+;;
+
+let compare user reference (to_string:'a -> string) =
+  match user,reference with
+  | Ok a, Ok b when a=b -> "got correct value of " ^ (to_string a), Successful
+  | Ok a, _ -> "got unexpected value of " ^ (to_string a), Failed
+  | Error a, Error b when a=b -> "got correct exception " ^ (Printexc.to_string a), Successful
+  | Error a, _ -> "got unexpected exception " ^ (Printexc.to_string a), Failed
+;;
+
+let test user reference sample to_string =
+  "Replace this string with your implementation." ;;
+
+(* PRINTING LISTS
+ * Write a function print_int_list : int list -> unit that takes a list of integers as input, and prints all the elements of the list, each on its own line.
+ * Write a function print_every_other : int -> int list -> unit that takes a value k and a list of integers as input, and prints the elements of the list that are in positions multiple of k, each on its own line. Note: the first element of a list is at the position 0, not 1.
+ * Write a function print_list : ('a -> unit) -> 'a list -> unit that takes a printer of values of some type 'a and a list of such values as input, and prints all the elements of the list, each on its own line. *)
+
+let print_every_other k l =
+  let rec aux m =
+    try
+      Printf.printf "This is aux %d\n" m;
+      Printf.printf "m is %d, k is %d\n" m k;
+      Printf.printf "calling aux m+k = aux %d+%d = aux %d\n" m k (m+k);
+      Printf.printf "%d\n" (List.nth l m);
+      aux (m+k);
+    with
+    | Failure a -> ()
+    | _ -> failwith "not OOB failure"
+  in
+  aux k
+;;
+
+let rec print_list print l =
+  match l with
+  | [] -> ()
+  | h::t ->
+      print h;
+      print_newline ();
+      print_list print t;
+;;
+
+(* DISPLAYING A FILESYSTEM HIERARCHY
+ * In this exercise, we will pretty-print directory structures.
+ * 
+ * The prelude gives the types that we will use to represent directory structures. A node in the filesystem is either a simple File, a Directory that contains a nested filesystem, or a Symlink. 
+ * The latter, as on Unix systems, is a fake file that redirects to another file. For this, it provides the relative path to this target file. The path is the list of directory to traverse to get to the target file, followed by the later. If one has to go a directory up, we use the common ".." directory name that represents the parent directory. 
+ * A filesystem is a list of named nodes. An example filesystem is given below, in the format that you will have to produce. Don't worry, we'll break this piece by piece.
+ * 
+ *   /photos
+ *   | /march
+ *   | | photo_1.bmp
+ *   | | photo_2.bmp
+ *   | | photo_3.bmp
+ *   | | index.html
+ *   | /april
+ *   | | photo_1.bmp
+ *   | | photo_2.bmp
+ *   | | index.html
+ *   /videos
+ *   | video1.avi
+ *   | video2.avi
+ *   | video3.avi
+ *   | video4.avi
+ *   | best.avi -> video4.avi
+ *   | index.html
+ *   /indexes
+ *   | videos.html -> ../videos/index.html
+ *   | photos_march.html -> ../photos/march/index.html
+ *   | photos_april.html -> ../photos/april/index.html
+ *   | photos_may.html -> INVALID
+ * This output was generated from the following OCaml structure.
+ * 
+ * [ "photos", Dir
+ *     [ "march", Dir
+ *         [ "photo_1.bmp", File ;
+ *           "photo_2.bmp", File ;
+ *           "photo_3.bmp", File ;
+ *           "index.html", File ] ;
+ *       "april", Dir
+ *         [ "photo_1.bmp", File ;
+ *           "photo_2.bmp", File ;
+ *           "index.html", File ] ] ;
+ *   "videos", Dir
+ *     [ "video1.avi", File ;
+ *       "video2.avi", File ;
+ *       "video3.avi", File ;
+ *       "video4.avi", File ;
+ *       "best.avi", Symlink [ "video4.avi" ] ;
+ *       "index.html", File ] ;
+ *   "indexes", Dir
+ *     [ "videos.html",
+ *       Symlink [ ".." ; "videos" ; "index.html" ] ;
+ *       "photos_march.html",
+ *       Symlink [ ".." ; "photos" ; "march" ; "index.html" ] ;
+ *       "photos_april.html",
+ *       Symlink [ ".." ; "photos" ; "april" ; "index.html" ] ;
+ *       "photos_may.html",
+ *       Symlink [ ".." ; "photos" ; "may" ; "index.html" ] ] ]
+ * Write a function print_path: string list -> unit that prints a relative path (the argument of a Symlink) and pretty prints it as shown in the example display, using slashes ('/') as separator.
+ * As you can see in the example, the depth of a file in the filesystem (the number of nested folders that are its ancestors) is represented by a sequence of vertical lines. Write a function print_file: int -> string -> unit that prints a file name, with the given number of "| " in front of it.
+ * Write a similar function print_symlink: int -> string -> string list -> unit that prints the link name, with the given number of "| " in front of it, and the relative path (preceded by an arrow " -> ").
+ * Write a similar function print_dir: int -> string -> unit that prints the dir name, with the given number of "| " in front of it, and the prepended '/'.
+ * Write a function print_filesystem: filesystem -> unit that traverses the filesystem, producing the same display as in the example. You will probably need an auxiliary, recursive function, and you will have to use the previous answers.
+ * Write a function resolve: string list -> string list -> string list. It takes as parameters:
+ * The full path from the root to a symlink, including its name. In the given example, that could be for instance [ "indexes" ; "photos_april.html" ].
+ * The relative path for this symlink. Here, that would be [ ".." ; "photos" ; "april" ; "index.html" ].
+ * The function returns the full path from the root to the target of the symlink. Here, we should get [ "photos" ; "april" ; "index.html" ]. Note that it may not be as easy as it seems, so you may think about it before plunging into the code.
+ * Write a function file_exists : filesystem -> string list -> bool that tells if a file exists in the filesystem. The path is the full absolute path to the file, and the target must be a File, not a Dir or a Symlink.
+ * Update your function print_filesystem: filesystem -> unit so that it replaces the printed relative path by "INVALID" when the symlink cannot be resolved to an existing file. *)
+(* THE GIVEN PRELUDE *)
+type filesystem =
+  (string * node) list
+and node =
+  | File
+  | Dir of filesystem
+  | Symlink of string list
+
+let rec print_path (path:string list) =
+  match path with
+  | [h] -> 
+     print_string h;
+  | h::t -> 
+     print_string h;
+     print_string "/";
+     print_path t;
+  | [] -> failwith "print_path error"
+;;
+
+let rec print_file lvl name =
+  if lvl = 0 then
+    print_string name
+  else
+    (print_string "| ";
+     print_file (lvl-1) name;
+    )
+;;
+
+let rec print_symlink lvl name path =
+  if lvl = 0 then
+    (print_string name;
+     print_string " -> ";
+     print_path path;
+    )
+  else
+    (print_string "| ";
+     print_symlink (lvl-1) name path;
+    )
+;;
+
+let rec print_dir lvl name =
+  if lvl = 0 then
+    (print_string "/";
+     print_string name;
+    )
+  else
+    (print_string "| ";
+     print_dir (lvl-1) name;
+    )
+;;
+
+let print_filesystem (root:filesystem) = 
+  let rec print_filesystem lvl items =
+    match items with
+    | [] -> ()
+    | h::t -> (let string,node = h in
+               match node with
+               | File -> (print_file lvl string;
+                          print_newline ();
+                          print_filesystem lvl t;
+                         )
+               | Dir d -> (print_dir lvl string;
+                           print_newline ();
+                           print_filesystem (lvl+1) d;
+                           print_filesystem lvl t;
+                          )
+               | Symlink l -> (print_symlink lvl string l;
+                               print_newline ();
+                               print_filesystem lvl t;
+                              )
+              )
+  in
+  print_filesystem 0 root
+;;
+
+let rec resolve sym path = 
+  let rec resolve acc path =
+    match acc,path with
+    | acc,[] -> List.rev acc
+    | [],h2::t2 when h2 = ".."-> resolve [] t2
+    | h1::t1,h2::t2 when h2 = ".."-> resolve t1 t2
+    | acc,h2::t2 -> resolve (h2::acc) t2
+  in
+  resolve (List.tl (List.rev sym)) path
+;;
+
+exception Found;;
+exception NotFound;;
+
+let rec file_exists root path =
+  let rec findnode filesystem string =
+    match (filesystem:filesystem) with
+    | [] -> None
+    | (str,nod)::t when str = string -> Some nod
+    | (str,nod)::t -> findnode t string
+  in
+  try
+    match (root:filesystem),(path:string list) with
+    | root,[] -> raise Found
+    | [],_ -> false
+    | h1::t1 as root,h2::t2 -> (let node = findnode root h2 in
+                                match node with
+                                | None -> raise NotFound
+                                | Some nod -> file_exists nod t2
+                               )
+    | _ -> false
+  with
+  | Found -> true
+  | NotFound -> false
+;;
