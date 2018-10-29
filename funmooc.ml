@@ -1113,10 +1113,10 @@ let rec no_consecutive_repetition = function
 
 (* LAMBDA-EXPRESSIONS AS VALUES
  * In this exercise, we will define functions as values, also called lambda expressions, using the keyword function to do a pattern-matching on their argument. As a result, you are not allowed to use match ... with in your code.
- * 
+ *
  * Define a function last_element: 'a list -> 'a that returns the last element of a list. Your function may return (invalid_arg "last_element") when the list is empty.
  * Write a function is_sorted: 'a list -> bool that takes a list l as argument, and that checks that the list is sorted in increasing order according to the polymorphic comparison operator <. *)
-let rec last_element = function 
+let rec last_element = function
   | [] -> invalid_arg "last_element"
   | [x] -> x
   | h::t -> last_element t
@@ -1154,7 +1154,7 @@ let rec fixedpoint f start (delta:float) =
 
 (* FUNCTIONS RETURNING FUNCTIONS
  * The following function checks the pairwise equality of the elements of two lists, on the common length of both lists:
- * 
+ *
  * let rec equal_on_common l1 l2 = match l1,l2 with
  *   | [],_ -> true
  *   | _,[] -> true
@@ -1218,18 +1218,18 @@ let rec compute env op =
   | Op (string, x, y) -> (lookup_function string env) (compute env x) (compute env y)
 ;;
 
-let rec compute_eff env = function 
+let rec compute_eff env = function
   | Value int -> int
   | Op (string, x, y) -> (lookup_function string env) (compute_eff env x) (compute_eff env y)
 ;;
 
 (* USING AND WRITING THE MAP FUNCTION
  * The idea of this exercise is to use the principle of the map function to implement algorithms that transform data structures using higher-order functions.
- * 
- * Using the function map from the module List, write a function wrap : 'a list -> 'a list list that transforms a list of elements 'ainto a list of singleton lists. 
+ *
+ * Using the function map from the module List, write a function wrap : 'a list -> 'a list list that transforms a list of elements 'ainto a list of singleton lists.
  * For instance, wrap [1;2;3] is equal to [[1];[2];[3]]
- * Consider the definition of the type tree given in the prelude. It represents binary trees carrying data items, on its internal nodes, and on its leaves. 
- * Write a function tree_map : ('a -> 'b) -> 'a tree -> 'b tree such that tree_map f t yields a tree of the same structure as t, but with all its data values x replaced by f x 
+ * Consider the definition of the type tree given in the prelude. It represents binary trees carrying data items, on its internal nodes, and on its leaves.
+ * Write a function tree_map : ('a -> 'b) -> 'a tree -> 'b tree such that tree_map f t yields a tree of the same structure as t, but with all its data values x replaced by f x
  * For example, suppose a function string_of_int : int -> string, that takes an integer and generates the string that represent this integer. Applied to tree_map and a tree of integers (i.e. of type int tree), it would yield a tree of strings (i.e. of type string tree). *)
 (* THE GIVEN PRELUDE *)
 type 'a tree =
@@ -1247,7 +1247,7 @@ let rec tree_map f = function
 
 (* USING FOLD TO PRODUCE LISTS
  * The idea of this exercise is to write functions that iterate on lists, using the fold_left and fold_right functions from the List module.
- * 
+ *
  * Write a function filter : ('a -> bool) -> 'a list -> 'a list that takes a predicate p (a function returning a boolean) and a list l and returns all the elements of l that satisfy p (for which p returns true).
  * Define, using List.fold_right, a function partition : ('a -> bool) -> 'a list -> 'a list * 'a list that takes a predicate p and a list l, and that partitions l by p. It returns a pair of two lists (lpos,lneg), where lpos is the list of all elements of l that satisfy p, and lneg is the list of all elements that do not satisfy p.
  * One way of sorting a list is as follows:
@@ -1287,12 +1287,12 @@ let rec sort = function
 (* USING FOLD TO CHECK PREDICATES
  * Using List.fold_left, write a function for_all : ('a -> bool) -> 'a list -> bool. It takes as argument a list l of type 'a list, and a predicate p of type 'a -> bool. It must return true if and only if all elements of l satisfy the predicate p.
  * Using List.fold_left, write a function exists : ('a -> bool) -> 'a list -> bool. It takes as argument a list l of type 'a list, and a predicate p of type 'a -> bool. It must returns true if at least one element of l satisfies the predicate p.
- * Write a function sorted : ('a -> 'a -> int) -> 'a list -> bool, using List.fold_left that checks that a list of elements l of type 'a is sorted, according to an ordering function cmp of type 'a -> 'a -> int. 
+ * Write a function sorted : ('a -> 'a -> int) -> 'a list -> bool, using List.fold_left that checks that a list of elements l of type 'a is sorted, according to an ordering function cmp of type 'a -> 'a -> int.
  * The ordering function returns:
  * 1 (or any positive number) if the first element is greater than the second,
  * -1 (or any negative number) if the first element is lesser than the second,
  * and 0 otherwise.
- * For the fold_left part, you can use the type 'a option as the accumulator: at each iteration of fold_left, if the list if sorted until now, the acccumulator is either Some v, where v is the previous element, or None otherwise. 
+ * For the fold_left part, you can use the type 'a option as the accumulator: at each iteration of fold_left, if the list if sorted until now, the acccumulator is either Some v, where v is the previous element, or None otherwise.
  * Remember, the empty list is sorted, so you can use the list with at least one element to check using fold_left. *)
 let for_all p l =
   let f b x =
@@ -1310,13 +1310,13 @@ let exists p l =
 
 let sorted cmp l =
   let f opt x =
-    match opt with 
+    match opt with
     | Some v when (cmp v x <= 0) -> Some x
     | _ -> None
   in
   match l with
   | [] -> true
-  | head::tail -> 
+  | head::tail ->
       (match List.fold_left f (Some head) l with
        | None -> false
        | Some v -> true
@@ -1325,13 +1325,13 @@ let sorted cmp l =
 
 (* UNRAVELING THE AUTOMATIC GRADER
  * In this exercise, we will unveil the basics of the grading system.
- * 
+ *
  * Note: This exercise is about exceptions, but it uses the unit type that is only presented in the next sequence.
- * 
- * For each question, we call both your function and a reference function on a list of randomly sampled test cases, and observe the results. We also have to handle the case where a function raises an exception instead of producing a result. Sometimes, we even expect your function to raise an exception, and want to compare it to the exception raised by the reference function. 
- * For this, we use the 'a result type given in the prelude. 
+ *
+ * For each question, we call both your function and a reference function on a list of randomly sampled test cases, and observe the results. We also have to handle the case where a function raises an exception instead of producing a result. Sometimes, we even expect your function to raise an exception, and want to compare it to the exception raised by the reference function.
+ * For this, we use the 'a result type given in the prelude.
  * Define a function exec: ('a -> 'b) -> 'a -> 'b result, that calls the given function on the given argument, and returns Ok with the result if everything went well, and Error with the exception raised, if there was one.
- * To be able to provide you with the nice error reports, we use an intermediate type for producing reports, similar to the one given in the prelude. 
+ * To be able to provide you with the nice error reports, we use an intermediate type for producing reports, similar to the one given in the prelude.
  * Define a function compare with the following signature.
  * compare : 'a result -> 'a result -> ('a -> string) -> message
  * This function will take first the user function's result and then the reference function's result. It also takes a printer compatible with the return type, to display the results as in one the following cases.
@@ -1340,10 +1340,10 @@ let sorted cmp l =
  * ("got correct exception Exit", Successful)
  * ("got unexpected exception Exit", Failed)
  * You must respect the exact wording for your solution to be accepted. To display exceptions, you can use the provided exn_to_string function.
- * Then we define random samplers for each type of data that will be passed to your function. For a given type 'a, a random sampler simply has type unit -> 'a, an imperative function that returns a new value of type 'a every time you give it a unit. 
+ * Then we define random samplers for each type of data that will be passed to your function. For a given type 'a, a random sampler simply has type unit -> 'a, an imperative function that returns a new value of type 'a every time you give it a unit.
  * Define a function test with the following signature.
  * test : ('a -> 'b) -> ('a -> 'b) -> (unit -> 'a) -> ('b -> string) -> report
- * This function must proceed to exactly 10 tests, calling the sampler each time, and return the list of messages. For each sample, you will exec the user function (the first parameter), then exec the reference function, and compare the results. It will then return the list containing the 10 comparison messages. 
+ * This function must proceed to exactly 10 tests, calling the sampler each time, and return the list of messages. For each sample, you will exec the user function (the first parameter), then exec the reference function, and compare the results. It will then return the list containing the 10 comparison messages.
  * Your solution must respect the constraint that the first call to the sampler corresponds to the first message of the list, the second to the second, etc. Be cautious about not reversing the list. And since the sampler is an imperative, remember to use let ... in constructs if necessary, to force the order of evaluation. *)
 (* THE GIVEN PRELUDE *)
 type report = message list
@@ -1400,11 +1400,11 @@ let rec print_list print l =
 
 (* DISPLAYING A FILESYSTEM HIERARCHY
  * In this exercise, we will pretty-print directory structures.
- * 
- * The prelude gives the types that we will use to represent directory structures. A node in the filesystem is either a simple File, a Directory that contains a nested filesystem, or a Symlink. 
- * The latter, as on Unix systems, is a fake file that redirects to another file. For this, it provides the relative path to this target file. The path is the list of directory to traverse to get to the target file, followed by the later. If one has to go a directory up, we use the common ".." directory name that represents the parent directory. 
+ *
+ * The prelude gives the types that we will use to represent directory structures. A node in the filesystem is either a simple File, a Directory that contains a nested filesystem, or a Symlink.
+ * The latter, as on Unix systems, is a fake file that redirects to another file. For this, it provides the relative path to this target file. The path is the list of directory to traverse to get to the target file, followed by the later. If one has to go a directory up, we use the common ".." directory name that represents the parent directory.
  * A filesystem is a list of named nodes. An example filesystem is given below, in the format that you will have to produce. Don't worry, we'll break this piece by piece.
- * 
+ *
  *   /photos
  *   | /march
  *   | | photo_1.bmp
@@ -1428,7 +1428,7 @@ let rec print_list print l =
  *   | photos_april.html -> ../photos/april/index.html
  *   | photos_may.html -> INVALID
  * This output was generated from the following OCaml structure.
- * 
+ *
  * [ "photos", Dir
  *     [ "march", Dir
  *         [ "photo_1.bmp", File ;
@@ -1476,9 +1476,9 @@ and node =
 
 let rec print_path (path:string list) =
   match path with
-  | [h] -> 
+  | [h] ->
      print_string h;
-  | h::t -> 
+  | h::t ->
      print_string h;
      print_string "/";
      print_path t;
@@ -1517,7 +1517,7 @@ let rec print_dir lvl name =
     )
 ;;
 
-let print_filesystem (root:filesystem) = 
+let print_filesystem (root:filesystem) =
   let rec print_filesystem lvl items =
     match items with
     | [] -> ()
@@ -1541,7 +1541,7 @@ let print_filesystem (root:filesystem) =
   print_filesystem 0 root
 ;;
 
-let rec resolve sym path = 
+let rec resolve sym path =
   let rec resolve acc path =
     match acc,path with
     | acc,[] -> List.rev acc
@@ -1555,24 +1555,169 @@ let rec resolve sym path =
 exception Found;;
 exception NotFound;;
 
-let rec file_exists root path =
-  let rec findnode filesystem string =
-    match (filesystem:filesystem) with
-    | [] -> None
-    | (str,nod)::t when str = string -> Some nod
-    | (str,nod)::t -> findnode t string
-  in
-  try
-    match (root:filesystem),(path:string list) with
-    | root,[] -> raise Found
-    | [],_ -> false
-    | h1::t1 as root,h2::t2 -> (let node = findnode root h2 in
-                                match node with
-                                | None -> raise NotFound
-                                | Some nod -> file_exists nod t2
-                               )
-    | _ -> false
-  with
-  | Found -> true
-  | NotFound -> false
+(* let rec file_exists root path =
+ *   let rec findnode filesystem string =
+ *     match (filesystem:filesystem) with
+ *     | [] -> None
+ *     | (str,nod)::t when str = string -> Some nod
+ *     | (str,nod)::t -> findnode t string
+ *   in
+ *   try
+ *     match (root:filesystem),(path:string list) with
+ *     | root,[] -> raise Found
+ *     | [],_ -> false
+ *     | h1::t1 as root,h2::t2 -> (let node = findnode root h2 in
+ *                                 match node with
+ *                                 | None -> raise NotFound
+ *                                 | Some nod -> file_exists nod t2
+ *                                )
+ *     | _ -> false
+ *   with
+ *   | Found -> true
+ *   | NotFound -> false
+ * ;; *)
+
+(* PRINTING WITH LOOPS
+ * Using the for loop construct, write an output_multiples : int -> int -> int -> unit function that prints all the multiples of x in the integer interval n ... m, separated by commas (',').
+ * Define a higher order function display_sign_until_zero: (int -> int) -> int -> unit that takes a function f, an integer m and applies f from 0 to m using a for loop. The function will print "negative" if the result of f if strictly negative and "positive" if strictly positive. Each print should appear on a new line.
+ * Your function has to stop displaying the signs as soon as f returns 0. In this case, it must print a last "zero".
+ * To implement this, you will define your own exception, raise it from inside the loop to break it, and catch it outside of the loop so that the function returns a successful (). You cannot use a predefined exception. *)
+(* THE GIVEN PRELUDE *)
+let is_multiple i x = i mod x = 0
 ;;
+
+(* YOUR ANSWER *)
+let output_multiples x n m =
+  for i = n to m do
+    if is_multiple i x then
+      Printf.printf "%d," i
+    else
+      ()
+  done
+;;
+output_multiples 1 2 5
+;;
+
+exception My_Zero
+;;
+let display_sign_until_zero f m =
+  try
+    for i = 0 to m do
+      let result = f i in
+      if result > 0 then
+        Printf.printf "positive\n"
+      else if result < 0 then
+        Printf.printf "negative\n"
+      else (
+        Printf.printf "zero\n";
+        raise My_Zero;
+      )
+    done
+  with
+  | My_Zero -> ()
+;;
+
+(* PRODUCING FINE ASCII ART
+ * In this exercise, we will display black and white images as text, where a black dot is printed as a '#' and a white dot as a ' '.
+ * 
+ * Instead of using imperative constructs for storing our images, images will simply be functions that take an x and a y and return a boolean that indicates if the function is black or white at this point. 
+ * This is materialized by the image type alias given in the prelude. 
+ * We will only use imperative features to display them.
+ * 
+ * Define a higher order function display_image: int -> int -> image -> unit that takes an integer width, another one height, a function which takes an x and a y, and renders (prints) the boolean function as a series of lines, using two nested for loops. 
+ * Each line corresponds to a y, the first line printed being for y = 0, the last one for y = height. 
+ * In each line, the first character printed must be for x = 0, the last one for x = width. When the function result is true, a sharp ('#') must be displayed, and a space otherwise. 
+ * To try your function, the prelude defines sample images and image builders. 
+ * For instance, the image disk 5 5 5 would be displayed as the following ASCII art, when rendered between coordinates 0 <= x <= 10 and 0 <= y <= 10.
+ *      #
+ *   #######
+ *  #########
+ *  #########
+ *  #########
+ * ###########
+ *  #########
+ *  #########
+ *  #########
+ *   #######
+ *      #
+ * Now, we want to blend images to compose complex images from simple ones. For this, we will use the blend type given the prelude. 
+ * If we take two functions f and g, we have that:
+ * Image f
+ * is the blended image looking exactly like f.
+ * And (Image f, Image g)
+ * is the blended image that is black only where both f and g are both black.
+ * Or (Image f, Image g)
+ * is the blended image that is black wherever either f or g or both are black.
+ * Rem (Image f, Image g)
+ * is the blended image that is black wherever f is black and g is not.
+ * Write a recursive render : blend -> int -> int -> bool function, that tells, for a given x and y the boolean color of the point, considering the given blended image.
+ * Define a function display_blend: int -> int -> blend -> unit that takes a width, another one height, a blended image, and displays it by combining the two previous functions. 
+ * As an example, the blend display_blend 10 10 (Rem (Image all_black, Image (disk 5 5 5))) would be displayed as the following ASCII art.
+ * ##### #####
+ * ##       ##
+ * #         #
+ * #         #
+ * #         #
+ * 
+ * #         #
+ * #         #
+ * #         #
+ * ##       ##
+ * ##### #####
+ * Bonus question: Did you see that the type of render is actually equivalent to blend -> image? *)
+
+(* THE GIVEN PRELUDE *)
+type image = int -> int -> bool ;;
+let all_white = fun x y -> false ;;
+let all_black = fun x y -> true ;;
+let checkers = fun x y -> y/2 mod 2 = x/2 mod 2 ;;
+let square cx cy s = fun x y ->
+  let minx = cx - s / 2 in
+  let maxx = cx + s / 2 in
+  let miny = cy - s / 2 in
+  let maxy = cy + s / 2 in
+  x >= minx && x <= maxx && y >= miny && y <= maxy
+;;
+let disk cx cy r = fun x y ->
+  let x' = x - cx in
+  let y' = y - cy in
+  (x' * x' + y' * y') <= r * r
+;;
+type blend =
+  | Image of image
+  | And of blend * blend
+  | Or of blend * blend
+  | Rem of blend * blend
+;;
+
+(* YOUR ANSWER *)
+let display_image width height f_image =
+  for i = 0 to width do
+    for j = 0 to height do
+      if f_image j i then
+        Printf.printf "#"
+      else
+        Printf.printf " "
+    done;
+    Printf.printf "\n"
+  done
+;;
+display_image 10 10 (disk 5 5 5)
+;;
+
+let rec render blend x y =
+  match blend with
+  | Image f -> display_image x y f
+  | And (Image f, Image g) -> display_image x y (render (f && g) x y)
+  | And (f, g) -> display_image x y (render (f && g) x y)
+  | And (f, g) -> display_image x y (render (f && g) x y)
+  | Or (Image f, Image g) ->
+  | Or (f, g) ->
+  | Or (f, g) ->
+  | Rem (Image f, Image g) ->
+  | Rem (f, g) ->
+  | Rem (f, g) ->
+;;
+
+let display_blend width height blend =
+  "Replace this string with your implementation." ;;
