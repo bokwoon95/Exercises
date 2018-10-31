@@ -1705,19 +1705,234 @@ let display_image width height f_image =
 display_image 10 10 (disk 5 5 5)
 ;;
 
-let rec render blend x y =
+let rec render blend x y : bool =
   match blend with
-  | Image f -> display_image x y f
-  | And (Image f, Image g) -> display_image x y (render (f && g) x y)
-  | And (f, g) -> display_image x y (render (f && g) x y)
-  | And (f, g) -> display_image x y (render (f && g) x y)
-  | Or (Image f, Image g) ->
-  | Or (f, g) ->
-  | Or (f, g) ->
-  | Rem (Image f, Image g) ->
-  | Rem (f, g) ->
-  | Rem (f, g) ->
+  | Image f -> f x y
+  | And (f, g) -> (render f x y) && (render g x y)
+  | Or (f, g) -> (render f x y) || (render g x y)
+  | Rem (f, g) -> (render f x y) && not (render g x y)
 ;;
 
 let display_blend width height blend =
-  "Replace this string with your implementation." ;;
+  display_image width height (render blend)
+;;
+
+(* ROTATING THE CONTENTS OF AN ARRAY
+ * In this exercise, you will improve the code shown in the course (and given in the template) for rotating arrays.
+ * 
+ * There is something perfectible with the code of rotate. 
+ * Find what, and fix the function!.
+ * Define rotate_by: 'a array -> int -> unit adding a parameter that allows to rotate by n positions. 
+ * For instance, rotate_by [|1;2;3;4|] 3 should yield [|4;1;2;3|]. *)
+let rotate a =
+  let n = Array.length a in 
+  try
+    if n < 2 then raise Exit else
+      let v = a.(0) in
+      for i = 0 to n-2 do
+        a.(i) <- a.(i+1)
+      done;
+      a.(n-1)<-v
+  with
+  | Exit -> ()
+;;
+
+let rotate_by a n =
+  let times =
+    if n >= 0 then
+      n
+    else if n < 0 then
+      let len = Array.length a in
+      len - (abs (n) mod len)
+    else
+      raise Exit
+  in
+  try
+    for i = 1 to times do
+      rotate a
+    done
+  with
+  | Exit -> ()
+;;
+
+(* IMPLEMENTING MUTABLE LISTS
+ * Using mutable record fields, we can define the type of a list data structure with explicit pointers, as defined by the type 'a xlist given in the prelude.
+ * 
+ * The empty list is written:
+ * 
+ * { pointer = Nil }
+ *   
+ * The singleton list containing only "one" is written:
+ * { pointer = List (1, { pointer = Nil }) }
+ *   
+ * The list containing the elements 1, then 2 then 3 is written:
+ * { pointer =
+ *     List (1, { pointer =
+ *                  List (2, { pointer =
+ *                               List (3, { pointer =
+ *                                            Nil }) }) }) }
+ *   
+ * Define head : 'a xlist -> 'a that returns the first element of the list if it exists, or fails with Empty_xlist. 
+ * This function does not modify the list.
+ * Define tail : 'a xlist -> 'a xlist that returns the list without its first element if it exists, or fails with Empty_xlist. 
+ * This function does not modify the list.
+ * Define add : 'a -> 'a xlist -> unit that modifies the list in place to add an element at the front.
+ * Define chop : 'a xlist -> unit that modifies the list to remove its front element, or fails with Empty_xlist.
+ * Define append : 'a xlist -> 'a xlist -> unit, a destructive concatenation operation that modifies the last pointer of the first list to point to the beginning of the second list.
+ * Define filter : ('a -> bool) -> 'a xlist -> unit, a destructive filter operation on lists that removes from the list all elements that do not satisfy the boolean predicate passed as parameter. *)
+(* THE GIVEN PRELUDE *)
+type 'a xlist =
+  { mutable pointer : 'a cell }
+and 'a cell =
+  | Nil
+  | List of 'a * 'a xlist;;
+let nil () =
+  { pointer = Nil };;
+let cons elt rest =
+  { pointer = List (elt, rest) };;
+exception Empty_xlist
+;;
+
+(* YOUR ANSWER *)
+let head l =
+  let { pointer = item } = l in
+  match item with
+  | Nil -> raise Empty_xlist
+  | List (h, t) -> h
+;;
+
+let tail l =
+  let { pointer = item } = l in
+  match item with
+  | Nil -> raise Empty_xlist
+  | List (h, t) -> t
+;;
+
+let add (a:'a) (l:'a xlist) =
+  let { pointer = temp } = l in
+  l.pointer <- List (a, { pointer = temp })
+;;
+
+let chop l =
+  let { pointer = temp } = l in
+  match temp with
+  | Nil -> raise Empty_xlist
+  | List (h, { pointer = t } ) -> l.pointer <- t
+;;
+
+let rec append l l' =
+  let { pointer = l_contents } = l in
+  match l_contents with
+  | List (h, t) -> append t l'
+  | Nil -> (let { pointer = l'_contents } = l' in
+            l.pointer <- l'_contents
+           )
+;;
+
+let positive x = x >= 0;;
+let negative x = x < 0;;
+let odd x = x mod 2 != 0;;
+let even x = x mod 2 = 0;;
+
+let rec filter p l =
+  let { pointer = l_contents } = l in
+  match l_contents with
+  | Nil -> ()
+  | List (h, t) -> (match p h with
+      | true -> Printf.printf "%d passed\n" h;filter p t
+      | false -> (filter p t;
+                  let { pointer = t_contents } = t in
+                  Printf.printf "%d failed\n" h;
+                  l.pointer <- t_contents;
+                 )
+    )
+;;
+
+(* SIMPLE USES OF REFERENCES
+ * Define swap : 'a ref -> 'a ref -> unit that swaps the contents of two references.
+ * Define update : 'a ref -> ('a -> 'a) -> 'a that calls a function on the contents of a reference, updates it with the result, and returns the old value. 
+ * For instance let r = ref 6 in update r (function x -> x + 1) should return 6 and set the reference to 7.
+ * Define move: 'a list ref -> 'a list ref -> unit, that removes the top argument from the first list and puts it on top of the second list. If the first list is empty, it should raise Empty.
+ * A common pattern is to use a reference to perform a computation in an imperative way, but to keep it in a local definition, completely invisible from outside the function implementation. 
+ * Define reverse: 'a list -> 'a list, that has a type and an observable behaviour that look like the ones of a purely functional function, buf that use a reference internally to perform the computation. It takes a list, and returns a copy of the list whose elements are in reverse order. 
+ * The only functions you can call, except from locally defined functions, are (!), (:=), ref, and move that you just defined. And you are not allowed to use pattern matching. *)
+(* THE GIVEN PRELUDE *)
+exception Empty ;;
+
+(* YOUR ANSWER *)
+let rec swap (ra:'a ref) (rb:'a ref) =
+  let temp = !ra in
+  ra := !rb;
+  rb := temp
+;;
+
+let update r f =
+  let r_old = !r in
+  let temp = f r_old in
+  r := temp;
+  r_old
+;;
+
+let move l1 l2 =
+  let l1_v = !l1 in
+  let l2_v = !l2 in
+  match l1_v with
+  | [] -> raise Empty
+  | h::t -> (l1 := t;
+             l2 := h::l2_v;
+            )
+;;
+
+let reverse l =
+  let l_ref = ref l in
+  let accu_ref = ref [] in
+  try
+    while true do
+      move l_ref accu_ref;
+    done;
+    []
+  with
+  | Empty -> !accu_ref
+;;
+
+(* READING LINES FROM THE STANDARD INPUT
+ * The code given in the template is an attempt to reading a list of lines from the standard input, slightly different from the one shown in the course notes. 
+ * At first sight, it behaves well.
+ * 
+ * # read_lines ();;
+ * Hello
+ * mister
+ * the
+ * caml!
+ * - : string list = [ "Hello" ; "mister" ; "the" ; "caml!" ]
+ *
+ * But if you call this function several times, you get unexpected results.
+ * Study the code, to understand what is going on, compare with the example shown in the course, and then fix this code.
+ * Important note: it is not possible to implement reading functions that actually ask the user to input something in the current toplevel environment. 
+ * For that, the environment defines an alternative version of read_line that simulates user interaction. Some calls will return a string, some others will (less often) raise End_of_file. *)
+
+let read_lines =
+  let sl = ref [] in
+  let rec aux () =
+    try
+      sl := read_line () :: !sl ;
+      aux ()
+    with
+      End_of_file -> List.rev !sl in
+  fun () -> aux ()
+;;
+
+let read_lines =
+  let sl = ref [] in
+  let rec aux () =
+    try
+      sl := read_line () :: !sl ;
+      aux ()
+    with
+      End_of_file -> (let ans = List.rev !sl in
+                      sl := [];
+                      ans
+                     )
+  in
+  fun () -> aux ()
+;;
