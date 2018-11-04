@@ -1,79 +1,77 @@
-type operation =
-  | Op of string * operation * operation
-  | Value of int
-;;
+module Stack = struct
+  type 'a t
+  let empty = []
+  let push x s = x::s
+  let pop = function
+    | [] -> None
+    | x::xs -> Some (x,xs)
+end;;
 
-type env = (string * (int -> int -> int)) list
-;;
+module Stack : sig
+  type 'a t
+  val empty : 'a list
+  val push : 'a -> 'a list -> 'a list
+  val pop : 'a list -> ('a * 'a list) option
+end = struct
+  type 'a t
+  let empty = []
+  let push x s = x::s
+  let pop = function
+    | [] -> None
+    | x::xs -> Some (x,xs)
+end;;
 
-let rec lookup_function str env =
-  match env with
-  | [] -> invalid_arg "lookup_function"
-  | (k,v)::t when k = str -> v
-  | h::t -> lookup_function str t
-;;
+module type StackSig = sig
+  type 'a t
+  val empty : 'a list
+  val push : 'a -> 'a list -> 'a list
+  val pop : 'a list -> ('a * 'a list) option
+end;;
+module Stack : StackSig = struct
+  type 'a t
+  let empty = []
+  let push x s = x::s
+  let pop = function
+    | [] -> None
+    | x::xs -> Some (x,xs)
+end;;
 
-(* a value or a function name *)
-type st = V of int | O of string;;
+module Forest = struct
+  type 'a forest = 'a list
+  module Tree = struct
+    type 'a tree =
+      | Leaf of 'a
+      | Node of 'a tree forest
+  end
+end;;
+let t = Forest.Tree.Leaf 42;;
+let t = Forest.Tree.Leaf "yee";;
 
-(* a recursive function *)
-type 'a fix = Fix of ('a fix -> 'a );;
+module Naturals : sig
+  type t
+  val zero : t
+  val succ : t -> t
+  val pred : t -> t
+end = struct
+  type t = int
+  let zero = 0
+  let succ n = if n = max_int then 0 else n+1
+  let pred = function
+    | 0 -> 0
+    | n -> n - 1
+end;;
 
-(* there are two stages 
-   1. conversion from operation to reverse polish notation
-   2. evaluation of the reverse polish notation using a stack 
-*)
-
-let compute2 env = function op -> 
-
-  (* the algorithm *)
-  (fun y1 y2 polish eval ->
-     y1 eval [] (y2 polish [] op) )
-
-  (* the fixed point combinator *)
-    (fun f -> 
-       (fun g -> g (Fix g)) 
-
-         ( fun (Fix x) -> 
-             fun a ->  f (x (Fix x)) a
-         )
-    )
-
-
-  (* the fixed point combinator *)
-    (fun f -> 
-       (fun g -> g (Fix g)) 
-
-         ( fun (Fix x) -> 
-             fun a ->  f (x (Fix x)) a
-         )
-    )
-
-
-
-
-    (* get reverse polish notation using stack s *)
-    (fun f -> 
-
-       fun s -> function
-         | Value x ->  (V x)::s
-         | Op (name, l, r) -> f  (f  ((O name)::s) r) l
-
-    )                         
-
-
-    (* evaluate the reverse polish expression using stack s *)
-    (fun f -> 
-
-       fun s -> function 
-         | [] -> (match s with 
-             |[x] -> x
-             | _ -> invalid_arg "eval")
-         | (V x)::r -> f  (x::s) r
-         | (O name)::r -> 
-             (match s with 
-              | y::x::rr -> f ((lookup_function name env x y)::rr) r 
-              | _ -> invalid_arg "eval"
-             )
-
-    )
+module type NaturalSig = sig
+  type t
+  val zero : t
+  val succ : t -> t
+  val pred : t -> t
+end;;
+module Naturals : NaturalSig = struct
+  type t = int
+  let zero = 0
+  let succ n = if n = max_int then 0 else n+1
+  let pred = function
+    | 0 -> 0
+    | n -> n - 1
+end;;
