@@ -1888,7 +1888,7 @@ let reverse l =
   let accu_ref = ref [] in
   try
     while true do
-      move l_ref accu_ref;
+      move l_ref accu_ref
     done;
     []
   with
@@ -1943,7 +1943,7 @@ open String;;
 open List;;
 open Digest;;
 let print_hashes (hashes : Digest.t list) : unit =
-  let print_hash h = h |> to_hex |> uppercase |> print_endline in
+  let print_hash h = h |> to_hex |> String.uppercase_ascii |> print_endline in
   iter print_hash hashes;;
 
 (* ACCESSING MODULES AND SUBMODULES
@@ -2005,10 +2005,17 @@ let bfs t =
     | [] ->
        List.rev results
     | l :: ls ->
-       let results = (focus l) :: results in
+       let results = (Tree.Iterator.focus l) :: results in
        try
-         aux results (ls @ [ go_first l; go_second l])
-       with Fail ->
+         aux results (ls @ [ Tree.Iterator.go_first l; Tree.Iterator.go_second l])
+       with Tree.Iterator.Fail ->
          aux results ls
   in
-  aux [] [Loc (t, Top)]
+  aux [] [Loc (t, Top)];;
+
+(* WRAPPING FUNCTIONS IN A MODULE
+ * Encapsulate the necessary values in a module named Exp so that the definition of example is accepted by the type checker. *)
+(* THE GIVEN PRELUDE *)
+type e = EInt of int | EMul of e * e | EAdd of e * e;;
+
+(* YOUR ANSWER *)
