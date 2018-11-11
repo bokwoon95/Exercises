@@ -66,6 +66,8 @@ module type NaturalSig = sig
   val zero : t
   val succ : t -> t
   val pred : t -> t
+  val of_int : int -> t
+  val to_int : t -> int
 end;;
 module Naturals : NaturalSig = struct
   type t = int
@@ -74,4 +76,6 @@ module Naturals : NaturalSig = struct
   let pred = function
     | 0 -> 0
     | n -> n - 1
+  let of_int x = x
+  let to_int x = x
 end;;
