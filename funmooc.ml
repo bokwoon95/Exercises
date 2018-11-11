@@ -666,16 +666,16 @@ let empty =
 
 let example =
   Trie (None,
-	[('i', Trie (Some 11,
+    [('i', Trie (Some 11,
                      [('n', Trie (Some 5, [('n', Trie (Some 9, []))]))]));
-	 ('t',
-	  Trie (None,
-		[('e',
-		  Trie (None,
-			[('n', Trie (Some 12, [])); ('d', Trie (Some 4, []));
-			 ('a', Trie (Some 3, []))]));
-		 ('o', Trie (Some 7, []))]));
-	 ('A', Trie (Some 15, []))])
+     ('t',
+      Trie (None,
+        [('e',
+          Trie (None,
+            [('n', Trie (Some 12, [])); ('d', Trie (Some 4, []));
+             ('a', Trie (Some 3, []))]));
+         ('o', Trie (Some 7, []))]));
+     ('A', Trie (Some 15, []))])
 (* YOUR ANSWER *)
 let rec children_from_char (m:char_to_children) (c:char) : trie option =
   match m with
@@ -1619,15 +1619,15 @@ let display_sign_until_zero f m =
 
 (* PRODUCING FINE ASCII ART
  * In this exercise, we will display black and white images as text, where a black dot is printed as a '#' and a white dot as a ' '.
- * 
- * Instead of using imperative constructs for storing our images, images will simply be functions that take an x and a y and return a boolean that indicates if the function is black or white at this point. 
- * This is materialized by the image type alias given in the prelude. 
+ *
+ * Instead of using imperative constructs for storing our images, images will simply be functions that take an x and a y and return a boolean that indicates if the function is black or white at this point.
+ * This is materialized by the image type alias given in the prelude.
  * We will only use imperative features to display them.
- * 
- * Define a higher order function display_image: int -> int -> image -> unit that takes an integer width, another one height, a function which takes an x and a y, and renders (prints) the boolean function as a series of lines, using two nested for loops. 
- * Each line corresponds to a y, the first line printed being for y = 0, the last one for y = height. 
- * In each line, the first character printed must be for x = 0, the last one for x = width. When the function result is true, a sharp ('#') must be displayed, and a space otherwise. 
- * To try your function, the prelude defines sample images and image builders. 
+ *
+ * Define a higher order function display_image: int -> int -> image -> unit that takes an integer width, another one height, a function which takes an x and a y, and renders (prints) the boolean function as a series of lines, using two nested for loops.
+ * Each line corresponds to a y, the first line printed being for y = 0, the last one for y = height.
+ * In each line, the first character printed must be for x = 0, the last one for x = width. When the function result is true, a sharp ('#') must be displayed, and a space otherwise.
+ * To try your function, the prelude defines sample images and image builders.
  * For instance, the image disk 5 5 5 would be displayed as the following ASCII art, when rendered between coordinates 0 <= x <= 10 and 0 <= y <= 10.
  *      #
  *   #######
@@ -1640,7 +1640,7 @@ let display_sign_until_zero f m =
  *  #########
  *   #######
  *      #
- * Now, we want to blend images to compose complex images from simple ones. For this, we will use the blend type given the prelude. 
+ * Now, we want to blend images to compose complex images from simple ones. For this, we will use the blend type given the prelude.
  * If we take two functions f and g, we have that:
  * Image f
  * is the blended image looking exactly like f.
@@ -1651,14 +1651,14 @@ let display_sign_until_zero f m =
  * Rem (Image f, Image g)
  * is the blended image that is black wherever f is black and g is not.
  * Write a recursive render : blend -> int -> int -> bool function, that tells, for a given x and y the boolean color of the point, considering the given blended image.
- * Define a function display_blend: int -> int -> blend -> unit that takes a width, another one height, a blended image, and displays it by combining the two previous functions. 
+ * Define a function display_blend: int -> int -> blend -> unit that takes a width, another one height, a blended image, and displays it by combining the two previous functions.
  * As an example, the blend display_blend 10 10 (Rem (Image all_black, Image (disk 5 5 5))) would be displayed as the following ASCII art.
  * ##### #####
  * ##       ##
  * #         #
  * #         #
  * #         #
- * 
+ *
  * #         #
  * #         #
  * #         #
@@ -1719,13 +1719,13 @@ let display_blend width height blend =
 
 (* ROTATING THE CONTENTS OF AN ARRAY
  * In this exercise, you will improve the code shown in the course (and given in the template) for rotating arrays.
- * 
- * There is something perfectible with the code of rotate. 
+ *
+ * There is something perfectible with the code of rotate.
  * Find what, and fix the function!.
- * Define rotate_by: 'a array -> int -> unit adding a parameter that allows to rotate by n positions. 
+ * Define rotate_by: 'a array -> int -> unit adding a parameter that allows to rotate by n positions.
  * For instance, rotate_by [|1;2;3;4|] 3 should yield [|4;1;2;3|]. *)
 let rotate a =
-  let n = Array.length a in 
+  let n = Array.length a in
   try
     if n < 2 then raise Exit else
       let v = a.(0) in
@@ -1757,24 +1757,24 @@ let rotate_by a n =
 
 (* IMPLEMENTING MUTABLE LISTS
  * Using mutable record fields, we can define the type of a list data structure with explicit pointers, as defined by the type 'a xlist given in the prelude.
- * 
+ *
  * The empty list is written:
- * 
+ *
  * { pointer = Nil }
- *   
+ *
  * The singleton list containing only "one" is written:
  * { pointer = List (1, { pointer = Nil }) }
- *   
+ *
  * The list containing the elements 1, then 2 then 3 is written:
  * { pointer =
  *     List (1, { pointer =
  *                  List (2, { pointer =
  *                               List (3, { pointer =
  *                                            Nil }) }) }) }
- *   
- * Define head : 'a xlist -> 'a that returns the first element of the list if it exists, or fails with Empty_xlist. 
+ *
+ * Define head : 'a xlist -> 'a that returns the first element of the list if it exists, or fails with Empty_xlist.
  * This function does not modify the list.
- * Define tail : 'a xlist -> 'a xlist that returns the list without its first element if it exists, or fails with Empty_xlist. 
+ * Define tail : 'a xlist -> 'a xlist that returns the list without its first element if it exists, or fails with Empty_xlist.
  * This function does not modify the list.
  * Define add : 'a -> 'a xlist -> unit that modifies the list in place to add an element at the front.
  * Define chop : 'a xlist -> unit that modifies the list to remove its front element, or fails with Empty_xlist.
@@ -1850,11 +1850,11 @@ let rec filter p l =
 
 (* SIMPLE USES OF REFERENCES
  * Define swap : 'a ref -> 'a ref -> unit that swaps the contents of two references.
- * Define update : 'a ref -> ('a -> 'a) -> 'a that calls a function on the contents of a reference, updates it with the result, and returns the old value. 
+ * Define update : 'a ref -> ('a -> 'a) -> 'a that calls a function on the contents of a reference, updates it with the result, and returns the old value.
  * For instance let r = ref 6 in update r (function x -> x + 1) should return 6 and set the reference to 7.
  * Define move: 'a list ref -> 'a list ref -> unit, that removes the top argument from the first list and puts it on top of the second list. If the first list is empty, it should raise Empty.
- * A common pattern is to use a reference to perform a computation in an imperative way, but to keep it in a local definition, completely invisible from outside the function implementation. 
- * Define reverse: 'a list -> 'a list, that has a type and an observable behaviour that look like the ones of a purely functional function, buf that use a reference internally to perform the computation. It takes a list, and returns a copy of the list whose elements are in reverse order. 
+ * A common pattern is to use a reference to perform a computation in an imperative way, but to keep it in a local definition, completely invisible from outside the function implementation.
+ * Define reverse: 'a list -> 'a list, that has a type and an observable behaviour that look like the ones of a purely functional function, buf that use a reference internally to perform the computation. It takes a list, and returns a copy of the list whose elements are in reverse order.
  * The only functions you can call, except from locally defined functions, are (!), (:=), ref, and move that you just defined. And you are not allowed to use pattern matching. *)
 (* THE GIVEN PRELUDE *)
 exception Empty ;;
@@ -1896,9 +1896,9 @@ let reverse l =
 ;;
 
 (* READING LINES FROM THE STANDARD INPUT
- * The code given in the template is an attempt to reading a list of lines from the standard input, slightly different from the one shown in the course notes. 
+ * The code given in the template is an attempt to reading a list of lines from the standard input, slightly different from the one shown in the course notes.
  * At first sight, it behaves well.
- * 
+ *
  * # read_lines ();;
  * Hello
  * mister
@@ -1908,7 +1908,7 @@ let reverse l =
  *
  * But if you call this function several times, you get unexpected results.
  * Study the code, to understand what is going on, compare with the example shown in the course, and then fix this code.
- * Important note: it is not possible to implement reading functions that actually ask the user to input something in the current toplevel environment. 
+ * Important note: it is not possible to implement reading functions that actually ask the user to input something in the current toplevel environment.
  * For that, the environment defines an alternative version of read_line that simulates user interaction. Some calls will return a string, some others will (less often) raise End_of_file. *)
 
 let read_lines =
@@ -2011,7 +2011,7 @@ let bfs t =
        with Tree.Iterator.Fail ->
          aux results ls
   in
-  aux [] [Loc (t, Top)];;
+  aux [] [Tree.Iterator.Loc (t, Tree.Iterator.Top)];;
 
 (* WRAPPING FUNCTIONS IN A MODULE
  * Encapsulate the necessary values in a module named Exp so that the definition of example is accepted by the type checker. *)
@@ -2019,3 +2019,241 @@ let bfs t =
 type e = EInt of int | EMul of e * e | EAdd of e * e;;
 
 (* YOUR ANSWER *)
+let int x = EInt x
+
+let mul a b =
+  match a, b with
+  | EInt 0, _ | _, EInt 0 -> EInt 0
+  | EInt 1, e | e, EInt 1 -> e
+  | a, b -> EMul (a, b)
+
+let add a b =
+  match a, b with
+  | EInt 0, e | e, EInt 0 -> e
+  | a, b -> EAdd (a, b)
+
+let rec eval = function
+  | EInt x -> x
+  | EAdd (l, r) -> eval l + eval r
+  | EMul (l, r) -> eval l * eval r
+
+module Exp : sig
+  type e = EInt of int | EMul of e * e | EAdd of e * e
+  val int : int -> e
+  val mul : e -> e -> e
+  val add : e -> e -> e
+  val eval : e -> int
+end = struct
+  type e = EInt of int | EMul of e * e | EAdd of e * e
+  let int x = EInt x
+  let mul a b =
+    match a, b with
+    | EInt 0, _ | _, EInt 0 -> EInt 0
+    | EInt 1, e | e, EInt 1 -> e
+    | a, b -> EMul (a, b)
+  let add a b =
+    match a, b with
+    | EInt 0, e | e, EInt 0 -> e
+    | a, b -> EAdd (a, b)
+  let rec eval = function
+    | EInt x -> x
+    | EAdd (l, r) -> eval l + eval r
+    | EMul (l, r) -> eval l * eval r
+end;;
+
+let example x y z = (* don't change anything to this defintion *)
+  Exp.int (Exp.eval (Exp.mul (Exp.int x) (Exp.add (Exp.int y) (Exp.int z))));;
+
+(* TYPE ABSTRACTION USING A SIGNATURE
+ * Encapsulate the type and values given in the template in a module named Exp.
+ * 
+ * To make e abstract, assign a signature to the module Exp that makes the type e abstract and publish the functions int, mul and add.
+ * 
+ * Given that interface, the only way to build a value of type e is to use the functions int, mul add and to_string. Such functions are called smart constructors because they perform some smart operations when they build values.
+ * 
+ * These smart constructors enforce the invariant that an expression represented by a value of type e is always simplified, i.e. it does not contain a subexpression of the form e * 1, 1 * e, e * 0, 0 * e, 0 + e or e + 0.
+ * 
+ * The following expression should be accepted.
+ * Exp.mul (Exp.int 0) (Exp.add (Exp.int 1) (Exp.int 2))
+ * The following expression should be rejected.
+ * Exp.EMul (Exp.EInt 0) (Exp.EAdd (Exp.EInt 1) (Exp.EInt 2))
+ * Unfortunately, turning e into an abstract data type prevents the user from pattern matching over values of type e. To allow pattern matching while forbidding the direct application of data constructors, OCaml provides a mechanism called private types. The interested student can get more information about this advanced (off-topic) feature here. *)
+
+(* YOUR ANSWER *)
+module type ExpSig = sig
+  type e
+  val int : int -> e
+  val mul : e -> e -> e
+  val add : e -> e -> e
+  val to_string : e -> string
+end;;
+module Exp : ExpSig = struct
+  type e = EInt of int | EMul of e * e | EAdd of e * e
+
+  let int x = EInt x
+
+  let mul a b =
+    match a, b with
+    | EInt 0, _ | _, EInt 0 -> EInt 0
+    | EInt 1, e | e, EInt 1 -> e
+    | a, b -> EMul (a, b)
+
+  let add a b =
+    match a, b with
+    | EInt 0, e | e, EInt 0 -> e
+    | a, b -> EAdd (a, b)
+
+  let rec to_string = function
+    | EInt i -> string_of_int i
+    | EMul (l, r) -> "(" ^ to_string l ^ " * " ^ to_string r ^ ")"
+    | EAdd (l, r) -> "(" ^ to_string l ^ " + " ^ to_string r ^ ")"
+end;;
+
+(* MULTISET
+ * A multiset is like a set, with the difference that a value can appear more than once.
+ * 
+ * Implement a module MultiSet that implements the signature MultiSet_S.
+ * Define a function letters: string -> char MultiSet.t (where MultiSet is the module defined in the previous question). This function produces a multiset in which all characters are associated to the times they appear in the input string.
+ * Define a function anagram: string -> string -> bool that uses the previous function to tell if two words have the same multiset of characters. *)
+(* THE GIVEN PRELUDE *)
+module type MultiSet_S = sig
+
+  (* A multi-set of type ['a t] is a collection of values of
+     type ['a] that may occur several times. *)
+  type 'a t
+
+  (* [occurrences s x] return the number of time [x] occurs
+     in [s]. *)
+  val occurrences : 'a t -> 'a -> int
+
+  (* The empty set has no element. There is only one unique
+     representation of the empty set. *)
+  val empty : 'a t
+
+  (* [insert s x] returns a new multi-set that contains all
+     elements of [s] and a new occurrence of [x]. Typically,
+     [occurrences s x = occurrences (insert s x) x + 1]. *)
+  val insert : 'a t -> 'a -> 'a t
+
+  (* [remove s x] returns a new multi-set that contains all elements
+     of [s] minus an occurrence of [x] (if [x] actually occurs in
+     [s]). Typically, [occurrences s x = occurrences (remove s x) x -
+     1] if [occurrences s x > 0]. *)
+  val remove : 'a t -> 'a -> 'a t
+
+end
+
+(* YOUR ANSWER *)
+module MultiSet : MultiSet_S = struct
+  type 'a t = 'a list
+  let occurrences multiset item =
+    let rec aux n multiset_dc=
+      match multiset_dc with
+      | [] -> n
+      | h::t when h=item -> aux (n+1) t
+      | h::t -> aux n t
+    in
+    aux 0 multiset
+  let empty = []
+  let insert multiset item = item::multiset
+  let remove multiset item =
+    let rec aux accu multiset_dc =
+      match multiset_dc with
+      | [] -> accu
+      | h::t when h=item -> (List.rev accu) @ t
+      | h::t -> aux (h::accu) t
+    in
+    aux [] multiset
+end;;
+
+let letters word : char MultiSet.t =
+  let rec charlist_of_string str =
+    let lastidx = (String.length str) - 1 in
+    match str with
+    | "" -> []
+    | x -> (String.get x 0) :: (charlist_of_string (String.sub str 1 lastidx))
+  in
+  let rec aux charlist multiset =
+    match charlist with
+    | [] -> multiset
+    | h::t -> aux t (MultiSet.insert multiset h)
+  in
+  aux (charlist_of_string word) MultiSet.empty
+;;
+
+let anagram word1 word2 =
+  let rec charlist_of_string str =
+    let lastidx = (String.length str) - 1 in
+    match str with
+    | "" -> []
+    | x -> (String.get x 0) :: (charlist_of_string (String.sub str 1 lastidx))
+  in
+  let ms1 = letters word1 in
+  let ms2 = letters word2 in
+  let charlist = charlist_of_string word1 in
+  let check_occurrences bool char =
+    bool && (MultiSet.occurrences ms1 char) = (MultiSet.occurrences ms2 char) in
+  List.fold_left check_occurrences true charlist
+;;
+
+(* REMOVE ELEMENTS FROM DICTIONARIES
+ * The following code is the program explained during the video sequence except that we have modified the interface DictSig a little bit. Now, it is possible to remove a key from a dictionary.
+ * 
+ * Update the code to have it accepted by the type-checker. *)
+(* THE GIVEN PRELUDE *)
+module type DictSig = sig
+  type ('key, 'value) t
+  val empty : ('key, 'value) t
+  val add : ('key, 'value) t -> 'key -> 'value -> ('key, 'value) t
+  exception NotFound
+  val lookup : ('key, 'value) t -> 'key -> 'value
+  val remove : ('key, 'value) t -> 'key -> ('key, 'value) t
+end;;
+
+(* YOUR ANSWER *)
+module Dict = struct
+  type ('key, 'value) t =
+    | Empty
+    | Node of ('key, 'value) t * 'key * 'value * ('key, 'value) t
+  let empty = Empty
+  let rec add d k v =
+    match d with
+    | Empty -> Node (Empty, k, v, Empty)
+    | Node (l, k', v', r) ->
+        if k = k' then Node (l, k, v, r)
+        else if k < k' then Node (add l k v, k', v', r)
+        else Node (l, k', v', add r k v)
+  exception NotFound
+  let rec lookup d k =
+    match d with
+    | Empty ->
+        raise NotFound
+    | Node (l, k', v', r) ->
+        if k = k' then v'
+        else if k < k' then lookup l k
+        else lookup r k
+  let rec remove d k =
+    match d with
+    | Empty -> Empty
+    | Node (l1, k1, v1, r1)  when k = k1 ->
+       (match l1, r1 with
+       | Empty, Empty -> Empty
+       | Empty, Node (l2, k2, v2, r2)
+         | Node (l2, k2, v2, r2), Empty -> Node (l2, k2, v2, r2)
+       | Node x, Node y -> Empty
+       )
+    | Node (l, k', v', r) ->
+       if k < k' then Node (remove l k, k', v', r)
+       else  Node (l, k', v', remove r k)
+end;;
+
+type ('key, 'value) bst =
+  | Empty
+  | Node of ('key, 'value) bst * 'key * 'value * ('key, 'value) bst
+
+let popnode (bst:(int,int)bst) =
+  match bst with
+  | Empty -> (0, 0), Empty
+  | Node (Empty, k, v, Empty) ->
+  | Node (l, k, v, r) ->
+
