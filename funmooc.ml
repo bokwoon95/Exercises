@@ -2211,7 +2211,7 @@ module type DictSig = sig
 end;;
 
 (* YOUR ANSWER *)
-module Dict = struct
+module Dict : DictSig = struct
   type ('key, 'value) t =
     | Empty
     | Node of ('key, 'value) t * 'key * 'value * ('key, 'value) t
@@ -2232,28 +2232,26 @@ module Dict = struct
         if k = k' then v'
         else if k < k' then lookup l k
         else lookup r k
+  let rec popnode bst =
+    match bst with
+    | Empty -> failwith "no"
+    | Node (Empty, k, v, Empty) -> (k, v), Empty
+    | Node (l, k, v, r) ->
+       let leaf, leftover = popnode r in
+       leaf, Node (l, k, v, leftover)
   let rec remove d k =
     match d with
     | Empty -> Empty
-    | Node (l1, k1, v1, r1)  when k = k1 ->
+    | Node (l1, k1, v1, r1) when k = k1 ->
        (match l1, r1 with
        | Empty, Empty -> Empty
        | Empty, Node (l2, k2, v2, r2)
          | Node (l2, k2, v2, r2), Empty -> Node (l2, k2, v2, r2)
-       | Node x, Node y -> Empty
+       | l1, r1 -> (let (key, var), leftover = popnode l1 in
+                    Node (leftover, key, var, r1)
+                   )
        )
     | Node (l, k', v', r) ->
        if k < k' then Node (remove l k, k', v', r)
        else  Node (l, k', v', remove r k)
 end;;
-
-type ('key, 'value) bst =
-  | Empty
-  | Node of ('key, 'value) bst * 'key * 'value * ('key, 'value) bst
-
-let popnode (bst:(int,int)bst) =
-  match bst with
-  | Empty -> (0, 0), Empty
-  | Node (Empty, k, v, Empty) ->
-  | Node (l, k, v, r) ->
-

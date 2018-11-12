@@ -193,6 +193,7 @@ let hashtbl_find_opt htable item =
 ;;
 let ht = Hashtbl.create 16;;
 Hashtbl.replace ht "a" 99;;
+let r = introspect ht;;
 
 let update_htable htable word payload =
   let var_opt = hashtbl_find_opt htable word
@@ -201,9 +202,10 @@ let update_htable htable word payload =
     | None -> 0,[]
     | Some {total=a; amounts=alist} -> a,alist
   in
+  let num_new = num + 1 in
   let alist_new = update_alist alist payload (fun a->a+1) 1
   in
-  Hashtbl.replace htable word {total=(num+1); amounts=alist_new}
+  Hashtbl.replace htable word {total=num_new; amounts=alist_new}
 ;;
 
 let build_htable words =
@@ -265,9 +267,12 @@ let walk_htable (htable:htable) : string list =
 (* everything else is a separator; *)
 (* and your function should not return any empty sentence. *)
 
+#use "story_strings.ml";;
+
 let alphanumeral_q char =
   let int = int_of_char char in
-  if int >= (int_of_char '0') && int <= (int_of_char '9')
+  if int >= 128 && int <= 255
+  || int >= (int_of_char '0') && int <= (int_of_char '9')
   || int >= (int_of_char 'a') && int <= (int_of_char 'z')
   || int >= (int_of_char 'A') && int <= (int_of_char 'Z')
   then
@@ -280,7 +285,9 @@ let punctuation_q char =
   let int = int_of_char char in
   if int = (int_of_char ';')
   || int = (int_of_char ',')
+  || int = (int_of_char ':')
   || int = (int_of_char '-')
+  || int = (int_of_char '"')
   || int = (int_of_char '\'')
   || int = (int_of_char '?')
   || int = (int_of_char '!')
@@ -302,55 +309,9 @@ let terminator_q char =
     false
 ;;
 
-let separator_q char =
-  not (alphanumeral_q char || punctuation_q char);;
-
-let flush_properly char word_buf word_list sentence_list =
-  let word_buf_not_empty = Buffer.length word_buf != 0 in
-  let word = Buffer.contents word_buf in
-  let strchar = String.make 1 char in
-
-  if terminator_q char
-  then
-    if word_buf_not_empty
-    then
-      let () = Buffer.clear word_buf in
-      let word_list = strchar::word::word_list in
-      let sentence_list = (List.rev word_list)::sentence_list in
-      let word_list = [] in
-      word_list,sentence_list
-    else
-      let word_list = strchar::word_list in
-      let sentence_list = (List.rev word_list)::sentence_list in
-      let word_list = [] in
-      word_list,sentence_list
-
-  else if punctuation_q char
-  then
-    if word_buf_not_empty
-    then
-      let () = Buffer.clear word_buf in
-      let word_list = strchar::word::word_list in
-      word_list,sentence_list
-    else
-      let word_list = strchar::word_list in
-      word_list,sentence_list
-
-  else if alphanumeral_q char
-  then
-    let () = Buffer.add_char word_buf char in
-    word_list,sentence_list
-
-  else
-  if word_buf_not_empty
-  then
-    let () = Buffer.clear word_buf in
-    let word_list = word::word_list in
-    word_list,sentence_list
-  else
-    word_list,sentence_list
-;;
-
+(* Depending on what the character is,
+ * flush the word buffer to the word list
+ * or word list to sentence list accordingly *)
 let flush_properly char word_buf word_list sentence_list =
   if alphanumeral_q char
   then
@@ -402,6 +363,7 @@ let wl,sl = flush_properly ';' wb wl sl;;
 let wl,sl = flush_properly 'b' wb wl sl;;
 let wl,sl = flush_properly 'c' wb wl sl;;
 let wl,sl = flush_properly 'd' wb wl sl;;
+let wl,sl = flush_properly ' ' wb wl sl;;
 let wl,sl = flush_properly '.' wb wl sl;;
 Buffer.contents wb;;
 
@@ -416,9 +378,11 @@ let sentences str =
     then
       let word_list,sentence_list
         = flush_properly ' ' word_buf word_list sentence_list in
-      (* (List.rev (List.rev word_list)::sentence_list) *)
-      (* (List.rev word_list)::sentence_list *)
-      List.rev sentence_list
+      if word_list = []
+      then
+        List.rev sentence_list
+      else
+        List.rev ((List.rev word_list)::sentence_list)
     else
       let char = Buffer.nth story_buf i in
       let word_list,sentence_list =
@@ -429,4 +393,59 @@ let sentences str =
 ;;
 
 let sntnc = "This is a\nsample, albeit short, sentence. That should spawn three--! sentences.";;
+let sss = "a good woman is proud of her daughter and a good daughter is proud of her mom";;
+sentences sss;;
 sentences sntnc;;
+
+(* Now, we will drastically improve the results by matching sequences of more than two words. We will thus update the format of our tables again, and use the following ptable type (which looks a lot like the previous one). *)
+
+type ptable =
+  { prefix_length : int ;
+    table : (string list, distribution) Hashtbl.t }
+;;
+
+(* So let's say we want to identify sequences of N words in the text. The prefix_length field contains N−1. The table field associates each list of N−1 words from the text with the distribution of its possible successors. *)
+
+(* prefix             | → | next    | freq
+ * ---------------------------------------
+ * ["START"; "START"] | → | "I"     | 100%
+ * ["START"; "I"]     | → | "am"    | 100%
+ * ["I"; "am"]        | → | "a"     | 100%
+ * ["am"; "a"]        | → | "man"   | 100%
+ * ["man"; "and"]     | → | "my"    | 100%
+ * ["is"; "a"]        | → | "good"  | 100%
+ * ["and"; "my"]      | → | "dog"   | 100%
+ * ["my"; "dog"]      | → | "is"    | 100%
+ * ["makes"; "a"]     | → | "good"  | 100%
+ * ["a"; "good"]      | → | "man"   | 33%
+ *                    |   | "dog"   | 66%
+ * ["dog"; "is"]      | → | "a"     | 100%
+ * ["and"; "a"]       | → | "good"  | 100%
+ * ["good"; "dog"]    | → | "makes" | 50%
+ *                    |   | "and"   | 50%
+ * ["dog"; "and"]     | → | "a"     | 100%
+ * ["a"; "man"]       | → | "and"   | 100%
+ * ["good"; "man"]    | → | "STOP"  | 100%
+ * ["dog"; "makes"]   | → | "a"     | 100% *)
+
+(* The table on the right gives the lookup table for the example given at the beginning of the project: ”I am a man and my dog is a good dog and a good dog makes a good man”, and a size of 2. You can see that the branching points are fewer and make a bit more sense. 
+ * As you can see, we will use "STOP" as an end marker as before. But instead of a single "START" we will use as a start marker a prefix of the same size as the others, filled with "START".
+ * 
+ * First, define start: int -> string list that makes the start prefix for a given size (start 0 = [], start 1 = [ "START" ], start 2 = [ "START" ; "START" ], etc.). *)
+
+let start pl =
+  let rec aux accu pl =
+    if pl = 0
+    then
+      accu
+    else
+      aux ("START"::accu) (pl-1)
+  in
+  aux [] pl
+;;
+
+(* Define shift: string list -> string -> string list. It removes the front element of the list and puts the new element at the end. (shift [ "A" ; "B" ; "C" ] "D" = [ "B" ; "C" ; "D" ], shift [ "B" ; "C" ; "D" ] "E" = [ "C" ; "D" ; "E" ], etc.). *)
+
+let shift l x =
+  "Replace this string with your implementation."
+;;
