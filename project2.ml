@@ -61,16 +61,6 @@ let words str =
   aux 0 []
 ;;
 
-let teststring = "I am a man and my dog is a good dog and a good dog makes a good man"
-;;
-
-(* Write build_ltable : string list -> ltable that builds an associative list mapping each word present in the input text to all its possible successors (including duplicates). The table should also contain "START" that points to the first word and "STOP" that is pointed by the last word.
- * For instance, a correct (and minimal) table for "x y z y x y" looks like:
- * [ ("z", [ "y" ]);
- *   ("x", [ "y" ; "y" ]);
- *   ("START", [ "x" ]);
- *   ("y", [ "x" ; "z" ; "STOP" ]) ] *)
-
 let update_alist alist word payload_f default =
   let rec aux alist_dc accu =
     match alist_dc with
@@ -80,12 +70,6 @@ let update_alist alist word payload_f default =
   in
   aux alist []
 ;;
-let lis = [
-    ("z", [ "y" ]);
-    ("x", [ "y" ; "y" ]);
-    ("START", [ "x" ]);
-    ("y", [ "x" ; "z" ; "STOP" ]) ];;
-let r = update_alist lis "ee" (fun a -> "yeet"::a) ["STAN"];;
 
 let build_ltable words =
   let rec aux words2 accu =
@@ -96,6 +80,7 @@ let build_ltable words =
   in
   aux ("START"::words) []
 ;;
+
 let teststring = "I am a man and my dog is a good dog and a good dog makes a good man";;
 let ts_lis = words teststring;;
 let r = build_ltable ts_lis;;
@@ -193,7 +178,6 @@ let hashtbl_find_opt htable item =
 ;;
 let ht = Hashtbl.create 16;;
 Hashtbl.replace ht "a" 99;;
-let r = introspect ht;;
 
 let update_htable htable word payload =
   let var_opt = hashtbl_find_opt htable word
@@ -428,9 +412,30 @@ type ptable =
  * ["good"; "man"]    | → | "STOP"  | 100%
  * ["dog"; "makes"]   | → | "a"     | 100% *)
 
-(* The table on the right gives the lookup table for the example given at the beginning of the project: ”I am a man and my dog is a good dog and a good dog makes a good man”, and a size of 2. You can see that the branching points are fewer and make a bit more sense. 
+(* I am a man and my dog is a good dog and a good dog makes a good man
+ *
+ * START ; START -> I
+ * START ; I     -> am
+ * I     ; am    -> a
+ * am    ; a     -> man
+ * a     ; man   -> and
+ * man   ; and   -> my
+ * and   ; my    -> dog
+ * my    ; dog   -> is
+ * dog   ; is    -> a
+ * is    ; a     -> good
+ * a     ; good  -> dog, dog, man
+ * good  ; dog   -> and, makes
+ * dog   ; and   -> a
+ * and   ; a     -> good
+ * dog   ; makes -> a
+ * makes ; a     -> good
+ * good  ; man   -> END
+ *)
+
+(* The table on the right gives the lookup table for the example given at the beginning of the project: ”I am a man and my dog is a good dog and a good dog makes a good man”, and a size of 2. You can see that the branching points are fewer and make a bit more sense.
  * As you can see, we will use "STOP" as an end marker as before. But instead of a single "START" we will use as a start marker a prefix of the same size as the others, filled with "START".
- * 
+ *
  * First, define start: int -> string list that makes the start prefix for a given size (start 0 = [], start 1 = [ "START" ], start 2 = [ "START" ; "START" ], etc.). *)
 
 let start pl =
@@ -447,5 +452,90 @@ let start pl =
 (* Define shift: string list -> string -> string list. It removes the front element of the list and puts the new element at the end. (shift [ "A" ; "B" ; "C" ] "D" = [ "B" ; "C" ; "D" ], shift [ "B" ; "C" ; "D" ] "E" = [ "C" ; "D" ; "E" ], etc.). *)
 
 let shift l x =
+  match l with
+  | [] -> [x]
+  | h::t -> List.rev (x::(List.rev t))
+;;
+
+(* Define build_ptable : string list -> int -> ptable that builds a table for a given prefix length, using the two previous functions. *)
+
+let list_hd_opt = function
+  | [] -> None
+  | h::t -> Some h;;
+
+let build_ptable words pl : ptable =
+  let table = Hashtbl.create 16 in
+  let rec aux words_dc plist payload =
+    match payload with
+    | None -> Hashtbl.add table plist {total=0; amounts=[]}
+    | Some payload -> (
+        match words_dc with
+        | [] -> update_htable table plist payload
+        | [x] -> (
+            let () = update_htable table plist payload in
+            aux [] (shift plist x) (Some "STOP")
+          )
+        | x::y::t -> (
+            let () = update_htable table plist payload in
+            aux (y::t) (shift plist x) (Some y)
+          )
+      )
+  in
+  aux words (start pl) (list_hd_opt words);
+  { prefix_length = pl; table = table }
+;;
+
+let introspect_pt ptable =
+  let { prefix_length=pl; table=ht } = ptable in
+  let result = introspect ht in
+  ( pl, result )
+;;
+
+let r = build_ptable
+  ["In"; "a"; "land"; "of"; "myths"; ","; "and"; "a"; "time"; "of"; "magic";
+   ","; "the"; "destiny"; "of"; "a"; "great"; "kingdom"; "rests"; "on";
+   "the"; "shoulders"; "of"; "a"; "young"; "man"; "."]
+  2;;
+introspect_pt r;;
+let r = build_ptable
+  []
+  2;;
+introspect_pt r;;
+
+(* Define walk_ptable : ptable -> string list that generates a sentence from a given ptable. Unless you put specific annotations, next_in_htable should be polymorphic enough to work on the field table of a ptable, so you don't have to rewrite one. If you want, since we now have proper sentence splitting, you can generate multi-sentence texts, by choosing randomly to continue from the start after encountering a "STOP". *)
+
+let next_in_ptable (ptable:ptable) plist =
+  let {prefix_length; table} = ptable in
+  try
+    let {total; amounts} = Hashtbl.find table plist in
+    let rand_idx = (Random.int total) + 1 in
+    let rec aux i l = match l with
+      | [] -> failwith "next_in_ptable.aux: reached end of l but i still > 0"
+      | (k,v)::t -> (
+          let i2 = i - v in
+          if i2 <= 0 then k
+          else aux i2 t
+        )
+    in
+    aux rand_idx amounts
+  with
+  | Not_found -> "plist not found in ptable"
+;;
+
+let walk_ptable { table ; prefix_length = pl } : string list =
+  let rec aux accu input =
+    let output = next_in_htable table input in
+    match output with
+    | "STOP" -> List.rev accu
+    | _ -> aux (output::accu) (shift input output)
+  in
+  aux [] (start pl)
+;;
+
+(* Finally, the most funny texts are generated when mixing various kinds of inputs together (pirate stories, history books, recipes, political news, etc.).
+ *
+ * Define merge_ptables: ptable list -> ptable that combines several tables together (you may fail with an exception if the prefix sizes are inconsistent). *)
+
+let merge_ptables (tl:ptable list) =
   "Replace this string with your implementation."
 ;;

@@ -20,7 +20,6 @@ let rec is_prime n =
     m = 1 || not (n mod m = 0) && aux_is_prime n (m-1) in
   if n = 1 then false else aux_is_prime n (n-1);;
 
-
 (* POINTS AND VECTORS
  * The given prelude defines three types, one for three dimensional points, another for velocity vectors in three dimensions, and another one representing moving objects in space.
  *
@@ -2215,7 +2214,9 @@ module Dict : DictSig = struct
   type ('key, 'value) t =
     | Empty
     | Node of ('key, 'value) t * 'key * 'value * ('key, 'value) t
+
   let empty = Empty
+
   let rec add d k v =
     match d with
     | Empty -> Node (Empty, k, v, Empty)
@@ -2223,7 +2224,9 @@ module Dict : DictSig = struct
         if k = k' then Node (l, k, v, r)
         else if k < k' then Node (add l k v, k', v', r)
         else Node (l, k', v', add r k v)
+
   exception NotFound
+
   let rec lookup d k =
     match d with
     | Empty ->
@@ -2232,6 +2235,7 @@ module Dict : DictSig = struct
         if k = k' then v'
         else if k < k' then lookup l k
         else lookup r k
+
   let rec popnode bst =
     match bst with
     | Empty -> failwith "no"
@@ -2239,6 +2243,7 @@ module Dict : DictSig = struct
     | Node (l, k, v, r) ->
        let leaf, leftover = popnode r in
        leaf, Node (l, k, v, leftover)
+
   let rec remove d k =
     match d with
     | Empty -> Empty
