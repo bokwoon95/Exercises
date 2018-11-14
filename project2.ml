@@ -536,6 +536,33 @@ let walk_ptable { table ; prefix_length = pl } : string list =
  *
  * Define merge_ptables: ptable list -> ptable that combines several tables together (you may fail with an exception if the prefix sizes are inconsistent). *)
 
+(* a function that takes in a (string * int) and a (string * int) list
+ * if (string * int) already exists in the (string * int) list, increment int by one instead
+ * else add (string * int) to the (string * int) list
+ *) 
+let rec merge_alists alist1 alist2 =
+  match alist1 with
+  | [] -> alist2
+  | (k, v)::t -> merge_alists t (update_alist alist1 k (fun a->a+v) 1)
+;;
+
 let merge_ptables (tl:ptable list) =
-  "Replace this string with your implementation."
+  let overall_ptable = Hashtbl.create 16 in
+
+  let update_overall_ptable k {total; amounts} () =
+    match hashtbl_find_opt overall_ptable k with
+    | None -> Hashtbl.add overall_ptable k {total; amounts}
+    | Some {total=total2; amounts=amounts2} -> 
+       let new_total = total + total2 in
+       let new_alist = merge_alists amounts amounts2 in
+       Hashtbl.replace overall_ptable k {total=new_total; amounts=new_alist}
+  in
+
+  let rec aux (tl_dc:ptable list) pl = match tl_dc with
+    | [] -> { prefix_length = pl; table = overall_ptable }
+    | {prefix_length; table}::t ->
+       Hashtbl.fold update_overall_ptable table ();
+       aux t prefix_length
+  in
+  aux (tl:ptable list) 0
 ;;
