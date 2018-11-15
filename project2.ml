@@ -539,22 +539,49 @@ let walk_ptable { table ; prefix_length = pl } : string list =
 (* a function that takes in a (string * int) and a (string * int) list
  * if (string * int) already exists in the (string * int) list, increment int by one instead
  * else add (string * int) to the (string * int) list
- *) 
+ *)
+let update_alist alist word payload_f default =
+  let rec aux alist_dc accu =
+    match alist_dc with
+    | [] -> List.rev ((word, default)::accu)
+    | (k,v)::t ->
+      if k = word
+      then
+        List.rev ((k, payload_f v)::accu) @ t
+      else
+        aux t ((k,v)::accu)
+  in
+  aux alist []
+;;
+
+let alist = [("A", 1)] in
+let word = "a" in
+update_alist alist word (fun a->a+1) 1
+
 let rec merge_alists alist1 alist2 =
   match alist1 with
   | [] -> alist2
-  | (k, v)::t -> merge_alists t (update_alist alist1 k (fun a->a+v) 1)
+  | (k, v)::t -> merge_alists t (update_alist alist2 k (fun a->a+v) v)
 ;;
+
+let print_list list =
+  Printf.printf "[";
+  List.iter (fun a-> Printf.printf "%s;" a) list;
+  Printf.printf "]";
+
+let alist1 = [("a", 1)] in
+let alist2 = [("A", 1)] in
+merge_alists alist1 alist2;;
 
 let merge_ptables (tl:ptable list) =
   let overall_ptable = Hashtbl.create 16 in
 
-  let update_overall_ptable k {total; amounts} () =
+  let update_overall_ptable k {total=total1; amounts=amounts1} () =
     match hashtbl_find_opt overall_ptable k with
-    | None -> Hashtbl.add overall_ptable k {total; amounts}
-    | Some {total=total2; amounts=amounts2} -> 
-       let new_total = total + total2 in
-       let new_alist = merge_alists amounts amounts2 in
+    | None -> Hashtbl.add overall_ptable k {total=total1; amounts=amounts1}
+    | Some {total=total2; amounts=amounts2} ->
+       let new_total = total1 + total2 in
+       let new_alist = merge_alists amounts1 amounts2 in
        Hashtbl.replace overall_ptable k {total=new_total; amounts=new_alist}
   in
 

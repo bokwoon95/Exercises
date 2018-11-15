@@ -2065,13 +2065,13 @@ let example x y z = (* don't change anything to this defintion *)
 
 (* TYPE ABSTRACTION USING A SIGNATURE
  * Encapsulate the type and values given in the template in a module named Exp.
- * 
+ *
  * To make e abstract, assign a signature to the module Exp that makes the type e abstract and publish the functions int, mul and add.
- * 
+ *
  * Given that interface, the only way to build a value of type e is to use the functions int, mul add and to_string. Such functions are called smart constructors because they perform some smart operations when they build values.
- * 
+ *
  * These smart constructors enforce the invariant that an expression represented by a value of type e is always simplified, i.e. it does not contain a subexpression of the form e * 1, 1 * e, e * 0, 0 * e, 0 + e or e + 0.
- * 
+ *
  * The following expression should be accepted.
  * Exp.mul (Exp.int 0) (Exp.add (Exp.int 1) (Exp.int 2))
  * The following expression should be rejected.
@@ -2110,7 +2110,7 @@ end;;
 
 (* MULTISET
  * A multiset is like a set, with the difference that a value can appear more than once.
- * 
+ *
  * Implement a module MultiSet that implements the signature MultiSet_S.
  * Define a function letters: string -> char MultiSet.t (where MultiSet is the module defined in the previous question). This function produces a multiset in which all characters are associated to the times they appear in the input string.
  * Define a function anagram: string -> string -> bool that uses the previous function to tell if two words have the same multiset of characters. *)
@@ -2197,7 +2197,7 @@ let anagram word1 word2 =
 
 (* REMOVE ELEMENTS FROM DICTIONARIES
  * The following code is the program explained during the video sequence except that we have modified the interface DictSig a little bit. Now, it is possible to remove a key from a dictionary.
- * 
+ *
  * Update the code to have it accepted by the type-checker. *)
 (* THE GIVEN PRELUDE *)
 module type DictSig = sig
@@ -2260,3 +2260,44 @@ module Dict : DictSig = struct
        if k < k' then Node (remove l k, k', v', r)
        else  Node (l, k', v', remove r k)
 end;;
+
+(* CHAR INDEXED HASHTABLES
+ * Have a look at the documentation of module Hashtbl.
+ * 
+ * Implement a module CharHashedType, compatible with the HashedType signature, where type t = char.
+ * Use the module defined in the previous question to instantiate the Hashtbl.Make functor as a module CharHashtbl.
+ * Reimplement the data structure of trie from a previous exercise, so that a hash table is used to represent the association between characters and children. To do so, complete the definition of module Trie, so that it is compatible with the given signature GenericTrie, whose 'a table type is instanciated to char indexed hash tables. 
+ * Be careful, a hash table is not a purely functional data structure. Therefore, it must be copied when necessary! 
+ * Note: you must neither change the signature nor the types of module Trie or the tests will fail. *)
+(* THE GIVEN PRELUDE *)
+module type GenericTrie = sig
+  type 'a char_table
+  type 'a trie = Trie of 'a option * 'a trie char_table
+  val empty : unit -> 'a trie
+  val insert : 'a trie -> string -> 'a -> 'a trie
+  val lookup : 'a trie -> string -> 'a option
+end
+
+(* YOUR ANSWER *)
+module CharHashedType =
+struct (* replace this structure with your implementation *) end
+
+module CharHashtbl =
+struct (* replace this structure with your implementation *) end
+
+module Trie : GenericTrie
+  with type 'a char_table = 'a CharHashtbl.t =
+struct
+  type 'a char_table = 'a CharHashtbl.t
+  type 'a trie = Trie of 'a option * 'a trie char_table
+
+  let empty () =
+    "Replace this string with your implementation." ;;
+
+  let lookup trie w =
+    "Replace this string with your implementation." ;;
+
+  let insert trie w v =
+    "Replace this string with your implementation." ;;
+
+end
